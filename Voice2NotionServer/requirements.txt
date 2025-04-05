@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+python-multipart
+langchain
+langchain-openai
+langgraph==0.3.21
+langgraph-prebuilt
+openai
+notion-client
+python-dotenv
+pydantic
+pytz
+slowapi
