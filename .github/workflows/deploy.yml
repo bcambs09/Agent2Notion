@@ -9,8 +9,8 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  ELASTIC_BEANSTALK_APP: Voice2Notion
-  ELASTIC_BEANSTALK_ENV: Voice2Notion-env
+  ELASTIC_BEANSTALK_APP: Voice2NotionServer
+  ELASTIC_BEANSTALK_ENV: Voice2NotionServer-env
 
 jobs:
   deploy:
