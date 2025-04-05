@@ -1,0 +1,51 @@
+name: Deploy to AWS Elastic Beanstalk
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-east-1
+  ELASTIC_BEANSTALK_APP: Voice2Notion
+  ELASTIC_BEANSTALK_ENV: Voice2Notion-env
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r Voice2NotionServer/requirements.txt
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Generate deployment package
+      run: |
+        cd Voice2NotionServer
+        zip -r ../deployment.zip . -x "*.git*" "*.env*" "__pycache__/*"
+
+    - name: Deploy to Elastic Beanstalk
+      uses: einaregilsson/beanstalk-deploy@v21
+      with:
+        aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        application_name: ${{ env.ELASTIC_BEANSTALK_APP }}
+        environment_name: ${{ env.ELASTIC_BEANSTALK_ENV }}
+        version_label: ${{ github.sha }}
+        region: ${{ env.AWS_REGION }}
+        deployment_package: deployment.zip 
