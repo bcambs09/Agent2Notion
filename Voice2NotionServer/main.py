@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, Body, HTTPException, Depends, Security
+from fastapi import FastAPI, UploadFile, File, Body, HTTPException, Depends, Security, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import APIKeyHeader
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
@@ -22,7 +22,7 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler) # type: ignore
 
 # Add security middleware
-app.add_middleware(HTTPSRedirectMiddleware)
+# app.add_middleware(HTTPSRedirectMiddleware)
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])  # Configure with your domain in production
 
 # Configure CORS with specific origins
@@ -59,14 +59,14 @@ class TextInput(BaseModel):
 
 @app.post("/process-audio")
 @limiter.limit("5/minute")
-async def process_audio(file: UploadFile = File(...), api_key: str = Depends(get_api_key)):
+async def process_audio(request: Request, file: UploadFile = File(...), api_key: str = Depends(get_api_key)):
     """Process audio file and create Notion content"""
     # TODO: Implement audio processing with Whisper
     return {"message": "Audio processing endpoint ready for implementation"}
 
 @app.post("/process-text")
 @limiter.limit("10/minute")
-async def process_text(input: TextInput, api_key: str = Depends(get_api_key)):
+async def process_text(request: Request, input: TextInput, api_key: str = Depends(get_api_key)):
     """Process text input and create Notion content using the agent workflow"""
     # Initialize the state
     state = {
@@ -80,7 +80,7 @@ async def process_text(input: TextInput, api_key: str = Depends(get_api_key)):
 
 @app.get("/health")
 @limiter.limit("30/minute")
-async def health_check():
+async def health_check(request: Request):
     """Health check endpoint"""
     return {"status": "healthy"}
 
