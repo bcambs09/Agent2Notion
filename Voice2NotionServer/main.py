@@ -57,26 +57,43 @@ if not NOTION_DATABASE_ID:
 class TextInput(BaseModel):
     text: str
 
-@app.post("/process-audio")
-@limiter.limit("5/minute")
-async def process_audio(request: Request, file: UploadFile = File(...), api_key: str = Depends(get_api_key)):
-    """Process audio file and create Notion content"""
-    # TODO: Implement audio processing with Whisper
-    return {"message": "Audio processing endpoint ready for implementation"}
+class TaskInput(BaseModel):
+    description: str
 
-@app.post("/process-text")
+# @app.post("/process-audio")
+# @limiter.limit("5/minute")
+# async def process_audio(request: Request, file: UploadFile = File(...), api_key: str = Depends(get_api_key)):
+#     """Process audio file and create Notion content"""
+#     # TODO: Implement audio processing with Whisper
+#     return {"message": "Audio processing endpoint ready for implementation"}
+
+# @app.post("/process-text")
+# @limiter.limit("10/minute")
+# async def process_text(request: Request, input: TextInput, api_key: str = Depends(get_api_key)):
+#     """Process text input and create Notion content using the agent workflow"""
+#     # Initialize the state
+#     state = {
+#         "messages": [HumanMessage(content=input.text)],
+#     }
+    
+#     # Run the workflow
+#     result = await chain.ainvoke(state)
+    
+#     return {"message": "Text processed successfully", "result": result}
+
+@app.post("/create-task")
 @limiter.limit("10/minute")
-async def process_text(request: Request, input: TextInput, api_key: str = Depends(get_api_key)):
-    """Process text input and create Notion content using the agent workflow"""
-    # Initialize the state
+async def create_task(request: Request, input: TaskInput, api_key: str = Depends(get_api_key)):
+    """Create a new task in Notion using the agent workflow"""
+    # Initialize the state with the task description
     state = {
-        "messages": [HumanMessage(content=input.text)],
+        "messages": [HumanMessage(content=input.description)],
     }
     
     # Run the workflow
     result = await chain.ainvoke(state)
     
-    return {"message": "Text processed successfully", "result": result}
+    return {"message": "Task created successfully", "result": result}
 
 @app.get("/health")
 @limiter.limit("30/minute")
