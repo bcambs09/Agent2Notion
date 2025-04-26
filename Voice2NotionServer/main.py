@@ -1,6 +1,6 @@
 from fastapi import FastAPI, UploadFile, File, Body, HTTPException, Depends, Security, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import APIKeyHeader
+from fastapi.security import APIKeyHeader, HTTPBearer, OAuth2PasswordBearer
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -35,12 +35,11 @@ app.add_middleware(
 )
 
 # API Key security
-API_KEY_NAME = "X-API-Key"
-api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=True)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-async def get_api_key(api_key_header: str = Security(api_key_header)) -> str:
-    if api_key_header == os.getenv("API_KEY"):
-        return api_key_header
+async def get_api_key(token: str = Depends(oauth2_scheme)) -> str:
+    if token == os.getenv("API_KEY"):
+        return token
     raise HTTPException(
         status_code=401,
         detail="Invalid API Key"
