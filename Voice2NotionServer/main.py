@@ -101,6 +101,11 @@ async def health_check(request: Request):
     """Health check endpoint"""
     return {"status": "healthy"}
 
+@app.get("/openapi.json", include_in_schema=False)
+async def get_openapi_schema():
+    """Get the OpenAPI specification"""
+    return app.openapi()
+
 # Clean up Notion client on shutdown
 @app.on_event("shutdown")
 async def shutdown_event():
