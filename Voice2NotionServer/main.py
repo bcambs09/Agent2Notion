@@ -65,6 +65,12 @@ class TextInput(BaseModel):
 class NotionInput(BaseModel):
     prompt: str
 
+class SearchInput(BaseModel):
+    query: str
+
+class QueryInput(BaseModel):
+    query: str
+
 @app.post("/add-to-notion")
 @limiter.limit("10/minute")
 async def add_to_notion(request: Request, input: NotionInput, api_key: str = Depends(get_api_key)):
@@ -76,6 +82,14 @@ async def add_to_notion(request: Request, input: NotionInput, api_key: str = Dep
     result = await chain.ainvoke(state)
 
     return {"message": "Request processed successfully", "result": result}
+
+@app.post("/search-notion")
+@limiter.limit("10/minute")
+async def search_notion(request: Request, input: SearchInput, api_key: str = Depends(get_api_key)):
+    """Sends a search query to Notion to find relevant data"""
+    logger.info(f"Searching Notion for: {input.query}")
+    resp = await notion.search(query=input.query)
+    return resp
 
 @app.get("/health")
 @limiter.limit("30/minute")
