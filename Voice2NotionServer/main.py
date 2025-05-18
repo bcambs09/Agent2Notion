@@ -91,6 +91,14 @@ async def search_notion(request: Request, input: SearchInput, api_key: str = Dep
     resp = await notion.search(query=input.query)
     return resp
 
+@app.post("/query-notion")
+@limiter.limit("100/minute")
+async def query_notion(request: Request, input: QueryInput, api_key: str = Depends(get_api_key)):
+    """Send a high level search to identify find relevant pages and databases whose titles match the query"""
+    logger.info(f"Querying Notion for: {input.query}")
+    resp = await notion.databases(database_id=input.database_id)
+    return resp
+
 @app.get("/health")
 @limiter.limit("30/minute")
 async def health_check(request: Request):
