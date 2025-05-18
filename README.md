@@ -70,6 +70,7 @@ ALLOWED_ORIGINS=*              # (optional) CORS
 NOTION_TOOL_DATA_BUCKET=<s3_bucket_for_tool_data>
 NOTION_TOOL_DATA_KEY=notion_tools_data.json   # (optional)
 NOTION_TOOL_DATA_PATH=./notion_tools_data.json  # (optional local override)
+EB_ENVIRONMENT_NAME=<elastic_beanstalk_env>  # used by the daily refresh Lambda
 ```
 If `NOTION_TOOL_DATA_PATH` is not set, the server will load `notion_tools_data.json` from the specified S3 bucket/key.
 
@@ -81,6 +82,27 @@ $ python scripts/generate_notion_tool_data.py
 # Upload directly to S3
 $ python scripts/generate_notion_tool_data.py --bucket <your-bucket>
 ```
+
+### Automating tool metadata refresh (AWS)
+Use the provided Lambda function and helper script to update the dynamic tool
+metadata daily:
+
+1. Package the Lambda code
+   ```bash
+   $ cd Voice2NotionServer/scripts
+   $ zip lambda_daily_tool_update.zip lambda_daily_tool_update.py \
+       generate_notion_tool_data.py ../notion_tools.py
+   ```
+2. Edit `setup_daily_tool_update.sh` and replace all placeholder ARNs,
+   bucket names and the Elastic Beanstalk environment name.
+3. Run the setup script
+   ```bash
+   $ ./setup_daily_tool_update.sh
+   ```
+
+The Lambda regenerates `notion_tools_data.json`, uploads it to the S3 bucket
+specified by `NOTION_TOOL_DATA_BUCKET` and restarts the environment defined in
+`EB_ENVIRONMENT_NAME`.
 
 ### Run the server
 ```bash
