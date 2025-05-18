@@ -11,6 +11,11 @@ import os
 from datetime import datetime, timezone
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
+from notion_tools import (
+    build_tools_from_data,
+    load_tool_data,
+    NotionProperty,
+)
 import pytz
 
 load_dotenv()
@@ -23,11 +28,6 @@ class AgentState(MessagesState):
     pass
 
 # Define our models
-class NotionProperty(BaseModel):
-    """Base model for Notion properties"""
-    type: str = Field(..., description="The type of the Notion property (e.g., title, status, select)")
-    value: dict = Field(..., description="The value of the property formatted according to Notion's API structure")
-
 class CreateTaskInput(BaseModel):
     """Input schema for creating a new task"""
     properties: dict[str, NotionProperty] = Field(
@@ -53,12 +53,6 @@ class AddMovieInput(BaseModel):
     title: str = Field(..., description="Title of the movie")
 
 # Define our tools
-async def get_database_schema() -> dict:
-    """Get the schema of the Notion database"""
-    notion = AsyncClient(auth=os.getenv("NOTION_TOKEN"))
-    database_id = os.getenv("NOTION_DATABASE_ID")
-    response = await notion.databases.retrieve(database_id=database_id)
-    return response
 
 async def create_new_task(task_input: CreateTaskInput) -> str:
     """Create a new task in the Notion database"""
@@ -92,18 +86,17 @@ async def add_to_movie_list(movie_input: AddMovieInput) -> str:
     print(f"Added movie to Notion: {response}")
     return "Added movie to Notion."
 
-# Create tools
-tools = [
-    # StructuredTool.from_function(
-    #     func=get_database_schema,
-    #     name="get_database_schema",
-    #     description="Get the schema of the Notion database"
-    # ),
+# Load cached tool data and build tools
+tool_data = load_tool_data()
+dynamic_tools = build_tools_from_data(tool_data)
+
+# Base tools provided by the application
+base_tools = [
     StructuredTool.from_function(
         coroutine=create_new_task,
         name="create_new_task",
         description=(
-            """Create a new task in the Notion database.\n"
+            "Create a new task in the Notion database.\n"
             "Extract task details from natural language and fill the CreateTaskInput model.\n"
             "Guidelines:\n"
             "- Name: main action or objective\n"
@@ -112,32 +105,10 @@ tools = [
             "- Tags: infer from context\n"
             "- Status: default 'Not started'\n"
             "- Size: infer if mentioned\n\n"
-
-            "IMPORTANT: You must use the CreateTaskInput model when creating tasks.
-            The model expects a dictionary of properties where each property is a NotionProperty object with:
-            - type: The type of the property (e.g., "title", "status", "select")
-            - value: The property value formatted according to Notion's API structure
-            
-            Example of correct property formatting:
-            {{
-                "properties": {{
-                    "Name": {{
-                        "type": "title",
-                        "value": {{"title": [{{"text": {{"content": "Task name"}}}}]}}
-                    }},
-                    "Status": {{
-                        "type": "status",
-                        "value": {{"status": {{"name": "Not started"}}}}
-                    }},
-                    "Priority": {{
-                        "type": "select",
-                        "value": {{"select": {{"name": "Medium"}}}}
-                    }}
-                }}
-            }}
-            
-            DO NOT ask for more information unless the input is completely unclear."
-            "If information is missing, apply sensible defaults. The current time is {current_time}."""
+            "IMPORTANT: You must use the CreateTaskInput model when creating tasks. The model expects a dictionary of properties where each property is a NotionProperty object with:\n"
+            "- type: The type of the property (e.g., 'title', 'status', 'select')\n"
+            "- value: The property value formatted according to Notion's API structure\n"
+            "If information is missing, apply sensible defaults. The current time is {current_time}."
         ),
     ),
     StructuredTool.from_function(
@@ -145,8 +116,10 @@ tools = [
         name="add_to_movie_list",
         description="Add a movie to the Notion movie list",
     ),
-
 ]
+
+# Final tool set combines static tools with dynamically generated ones
+tools = base_tools + dynamic_tools
 # Create the prompt
 prompt = ChatPromptTemplate.from_messages([
     (
