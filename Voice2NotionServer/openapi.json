@@ -5,16 +5,16 @@
     "version": "0.1.0"
   },
   "paths": {
-    "/create-task": {
+    "/add-to-notion": {
       "post": {
-        "summary": "Create Task",
-        "description": "Create a new task in Notion using the agent workflow",
-        "operationId": "create_task_create_task_post",
+        "summary": "Add To Notion",
+        "description": "Process any user request to add data to Notion using the agent workflow",
+        "operationId": "add_to_notion",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/TaskInput"
+                "$ref": "#/components/schemas/NotionInput"
               }
             }
           },
@@ -80,19 +80,19 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
-      "TaskInput": {
-        "properties": {
-          "description": {
-            "type": "string",
-            "title": "Description"
-          }
+        "NotionInput": {
+          "properties": {
+            "prompt": {
+              "type": "string",
+              "title": "Prompt"
+            }
+          },
+          "type": "object",
+          "required": [
+            "prompt"
+          ],
+          "title": "NotionInput"
         },
-        "type": "object",
-        "required": [
-          "description"
-        ],
-        "title": "TaskInput"
-      },
       "ValidationError": {
         "properties": {
           "loc": {

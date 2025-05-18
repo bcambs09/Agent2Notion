@@ -1,0 +1,40 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+---
+description: Use when user asks to make updates to the agentic Notion workflow
+globs: **/*
+alwaysApply: true
+---
+ # Agentic Workflow for Notion Updates
+
+This document outlines the agentic workflow for the Voice2Notion application, specifically how natural language input is processed to make updates to a user's Notion data. The system is built using LangGraph, leveraging its most modern version for robust and flexible agent creation.
+
+## Core Workflow
+
+1.  **Natural Language Input**: The API receives a natural language command from the user. This command describes a desired change or addition to their Notion workspace.
+    *   *Example*: "Create a new page in my 'Projects' database titled 'Q3 Marketing Campaign' and add a to-do item 'Draft initial proposal' due next Monday."
+
+2.  **Input Processing & Intent Recognition**: The input is initially processed to understand the user's intent and extract key entities. This might involve:
+    *   Identifying the type of operation (create, update, delete, query).
+    *   Extracting relevant data points (page titles, database names, task descriptions, due dates, etc.).
+
+3.  **LangGraph Agent Execution**: A specialized LangGraph agent takes the processed input and orchestrates the necessary steps to fulfill the request. This involves:
+    *   **Planning**: Breaking down the request into smaller, manageable tasks.
+    *   **Reasoning & Decision Making**: The agent decides which tools to use, in what order, and with what parameters, based on the input and the current state of the Notion workspace (if necessary, by querying it first).
+    *   **State Management**: LangGraph will manage the state of the workflow, allowing for retries, error handling, and complex multi-step operations.
+
+4.  **Notion API Interaction**: The agent, through its tools, makes calls to the Notion API to perform the requested actions. All interactions adhere to Notion's API specifications.
+
+5.  **Response & Confirmation**:
+    *   Upon successful completion, the API should return a confirmation to the user, potentially including a link to the created/updated Notion page or a summary of changes.
+    *   If an error occurs or clarification is needed, the agent should be able to communicate this back to the user.
+
+## Key Technologies & Principles
+
+*   **LangGraph**: Utilized for its capabilities in building stateful, multi-actor applications. We will use the latest version to benefit from the most recent features and improvements.
+*   **Modularity**: Tools for Notion interaction will be modular and well-defined, allowing for easy expansion and maintenance.
+*   **Error Handling**: Robust error handling will be implemented at each step of the process.
+*   **Idempotency**: Where possible, operations should be designed to be idempotent to prevent unintended side effects from retries.
