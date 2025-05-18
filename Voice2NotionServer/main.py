@@ -56,8 +56,8 @@ if not NOTION_DATABASE_ID:
 class TextInput(BaseModel):
     text: str
 
-class TaskInput(BaseModel):
-    description: str
+class NotionInput(BaseModel):
+    prompt: str
 
 # @app.post("/process-audio")
 # @limiter.limit("5/minute")
@@ -80,19 +80,17 @@ class TaskInput(BaseModel):
     
 #     return {"message": "Text processed successfully", "result": result}
 
-@app.post("/create-task")
+@app.post("/add-to-notion")
 @limiter.limit("10/minute")
-async def create_task(request: Request, input: TaskInput, api_key: str = Depends(get_api_key)):
-    """Create a new task in Notion using the agent workflow"""
-    # Initialize the state with the task description
+async def add_to_notion(request: Request, input: NotionInput, api_key: str = Depends(get_api_key)):
+    """Process any request to add data to Notion using the agent workflow"""
     state = {
-        "messages": [HumanMessage(content=input.description)],
+        "messages": [HumanMessage(content=input.prompt)],
     }
-    
-    # Run the workflow
+
     result = await chain.ainvoke(state)
-    
-    return {"message": "Task created successfully", "result": result}
+
+    return {"message": "Request processed successfully", "result": result}
 
 @app.get("/health")
 @limiter.limit("30/minute")

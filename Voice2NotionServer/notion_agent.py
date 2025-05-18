@@ -48,6 +48,10 @@ class CreateTaskInput(BaseModel):
         description="Dictionary of property names to their values. Must include Name, Status, and Priority."
     )
 
+class AddMovieInput(BaseModel):
+    """Input schema for adding a movie to the watch list"""
+    title: str = Field(..., description="Title of the movie")
+
 # Define our tools
 async def get_database_schema() -> dict:
     """Get the schema of the Notion database"""
@@ -73,6 +77,21 @@ async def create_new_task(task_input: CreateTaskInput) -> str:
     print(f"Created task in Notion: {response}")
     return "Created task in Notion."
 
+async def add_to_movie_list(movie_input: AddMovieInput) -> str:
+    """Add a movie to the Notion movie list"""
+    notion = AsyncClient(auth=os.getenv("NOTION_TOKEN"))
+    movie_db_id = os.getenv("NOTION_MOVIE_DATABASE_ID")
+    if not movie_db_id:
+        raise ValueError("NOTION_MOVIE_DATABASE_ID is not set")
+    response = await notion.pages.create(
+        parent={"database_id": movie_db_id},
+        properties={
+            "Name": {"title": [{"text": {"content": movie_input.title}}]}
+        }
+    )
+    print(f"Added movie to Notion: {response}")
+    return "Added movie to Notion."
+
 # Create tools
 tools = [
     # StructuredTool.from_function(
@@ -83,65 +102,36 @@ tools = [
     StructuredTool.from_function(
         coroutine=create_new_task,
         name="create_new_task",
-        description="Create a new task in the Notion database"
-    )
-]
+        description=(
+            """Create a new task in the Notion database.\n"
+            "Extract task details from natural language and fill the CreateTaskInput model.\n"
+            "Guidelines:\n"
+            "- Name: main action or objective\n"
+            "- Priority: Today, ASAP, High, Medium, Low, People (default ASAP)\n"
+            "- Due date: parse any date references\n"
+            "- Tags: infer from context\n"
+            "- Status: default 'Not started'\n"
+            "- Size: infer if mentioned\n\n"
+            "Use NotionProperty objects formatted to Notion's API for each property.\n"
+            "If information is missing, apply sensible defaults. The current time is {current_time}."""
+        ),
+    ),
+    StructuredTool.from_function(
+        coroutine=add_to_movie_list,
+        name="add_to_movie_list",
+        description="Add a movie to the Notion movie list",
+    ),
 
+]
 # Create the prompt
 prompt = ChatPromptTemplate.from_messages([
-    ("system", """You are a helpful assistant that creates Notion database entries based on voice input.
-    Your job is to extract task information from natural language input and create appropriate Notion tasks.
-    
-    You should follow these steps:
-    1. Extract task properties from the natural language input:
-       - Name: Use the main action/objective as the task name
-       - Priority: Look for priority indicators (high, medium, low, etc.)
-       - Due date: Look for date references
-       - Tags: Infer appropriate tags from the context
-       - Status: Always use "Not started" for new tasks
-       - Size: Infer from complexity if mentioned
-    
-    2. Create the task using the CreateTaskInput model with the extracted properties
-    
-    The database is a task management system with the following properties:
-    - Name (title): The task name
-    - Status (status): Current status (Not started, In progress, Done, Blocked)
-    - Priority (select): Task priority (Today, ASAP, High, Medium, Low, People)
-    - Due date (date): When the task is due.
-    - Tags (multi_select): Task categories
-    - Size (number): Task size/complexity
-    
-    IMPORTANT: You must use the CreateTaskInput model when creating tasks. The model expects a dictionary of properties where each property is a NotionProperty object with:
-    - type: The type of the property (e.g., "title", "status", "select")
-    - value: The property value formatted according to Notion's API structure
-    
-    Example of correct property formatting:
-    {{
-        "properties": {{
-            "Name": {{
-                "type": "title",
-                "value": {{"title": [{{"text": {{"content": "Task name"}}}}]}}
-            }},
-            "Status": {{
-                "type": "status",
-                "value": {{"status": {{"name": "Not started"}}}}
-            }},
-            "Priority": {{
-                "type": "select",
-                "value": {{"select": {{"name": "Medium"}}}}
-            }}
-        }}
-    }}
-    
-    DO NOT ask for more information unless the input is completely unclear.
-    Instead, try to extract as much as possible from the given input and use sensible defaults:
-    - Status: Always "Not started" for new tasks, unless the user specifies otherwise.
-    - Priority: Default to "ASAP" if not specified. The order of priority is Today, ASAP, High, Medium, Low, People (a special priority to track notes about specific people).
-    - Due date (date): When the task is due. For your reference, the current time is {current_time} - use this as a reference point.
-    - Tags: Leave empty if not clear from context
-    - Size: Omit if not mentioned
-    """),
-    MessagesPlaceholder(variable_name="messages")
+    (
+        "system",
+        "You are a helpful assistant that can add data to a user's Notion workspace."
+        " Use the available tools to create tasks or add movies as requested."
+        " Choose the appropriate tool based on the user's prompt."
+    ),
+    MessagesPlaceholder(variable_name="messages"),
 ])
 
 # Create the LLM
