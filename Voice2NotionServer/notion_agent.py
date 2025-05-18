@@ -101,9 +101,8 @@ try:
     else:
         tool_data = load_tool_data(None)
 except Exception as e:
-    logger.info("Falling back to generating tool metadata: %s", e)
-    cache_path = os.path.join(os.path.dirname(__file__), "notion_tools_data.json")
-    tool_data = asyncio.run(generate_and_cache_tool_metadata(cache_path))
+    logger.error("Unable to load tool data: %s", e)
+    exit(1)
 
 dynamic_tools = build_tools_from_data(tool_data)
 

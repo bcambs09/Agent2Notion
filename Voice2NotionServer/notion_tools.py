@@ -275,6 +275,7 @@ def _load_from_file(file_path: str) -> List[Dict[str, Any]]:
 def _load_from_s3(bucket: str, key: str) -> List[Dict[str, Any]]:
     s3 = boto3.client("s3")
     obj = s3.get_object(Bucket=bucket, Key=key)
+    logger.info(f"Loaded tool data from S3: {key}")
     return json.loads(obj["Body"].read())
 
 
