@@ -267,6 +267,11 @@ async def generate_and_cache_tool_metadata(file_path: str) -> List[Dict[str, Any
         json.dump(metadata, f, indent=2)
     return metadata
 
+async def generate_tool_metadata_json() -> str:
+    """Return the metadata as a pretty-printed JSON string (no disk I/O)."""
+    metadata = await build_tool_metadata()
+    return json.dumps(metadata, indent=2)
+
 def _load_from_file(file_path: str) -> List[Dict[str, Any]]:
     with open(file_path, "r") as f:
         return json.load(f)

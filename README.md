@@ -71,6 +71,11 @@ NOTION_TOOL_DATA_BUCKET=<s3_bucket_for_tool_data>
 NOTION_TOOL_DATA_KEY=notion_tools_data.json   # (optional)
 NOTION_TOOL_DATA_PATH=./notion_tools_data.json  # (optional local override)
 EB_ENVIRONMENT_NAME=<elastic_beanstalk_env>  # used by the daily refresh Lambda
+LAMBDA_EXECUTION_ROLE_ARN="<LAMBDA_EXECUTION_ROLE_ARN>"
+SCHEMA_REFRESH_CODE_BUCKET="<SCHEMA_REFRESH_CODE_BUCKET>"
+LAMBDA_NAME="<DESIRED_SCHEMA_UPDATE_LAMBDA_NAME>"
+LAMBDA_ARN="<CREATED_LAMBDA_ARN>"
+RULE_NAME="<DESIRED_CRON_RULE_NAME>"
 ```
 If `NOTION_TOOL_DATA_PATH` is not set, the server will load `notion_tools_data.json` from the specified S3 bucket/key.
 
@@ -89,16 +94,24 @@ metadata daily:
 
 1. Package the Lambda code
    ```bash
-   $ cd Voice2NotionServer/scripts
-   $ zip lambda_daily_tool_update.zip lambda_daily_tool_update.py \
-       generate_notion_tool_data.py ../notion_tools.py
+   $  ./Voice2NotionServer/scripts/build_lambda_daily_tool_update.sh 
    ```
-2. Edit `setup_daily_tool_update.sh` and replace all placeholder ARNs,
-   bucket names and the Elastic Beanstalk environment name.
-3. Run the setup script
+
+2. Run `./Voice2NotionServer/aws/setup_daily_tool_update.sh` to create the Lambda. Copy the LAMBDA_ARN.
+   
+2. Copy to S3
    ```bash
-   $ ./setup_daily_tool_update.sh
+   $ aws s3 cp Voice2NotionServer/scripts/lambda_daily_tool_update.zip \
+         s3://${SCHEMA_REFRESH_CODE_BUCKET}/lambda/voice2notion-daily-tool-update.zip \
+         --region us-east-1
    ```
+3. Update function code
+   ```base
+   $ aws lambda update-function-code \
+     --function-name voice2notion-daily-tool-update \
+     --s3-bucket ${SCHEMA_REFRESH_CODE_BUCKET} \
+     --s3-key lambda/voice2notion-daily-tool-update.zip \
+     --region us-east-1
 
 The Lambda regenerates `notion_tools_data.json`, uploads it to the S3 bucket
 specified by `NOTION_TOOL_DATA_BUCKET` and restarts the environment defined in
