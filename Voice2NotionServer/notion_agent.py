@@ -12,12 +12,9 @@ from datetime import datetime
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 from notion_tools import (
-    generate_and_cache_tool_metadata,
     load_tool_data,
     build_tools_from_data,
-    NotionProperty,
-    DatabaseEntryInput,
-    PageTextInput,
+    NotionProperty
 )
 import pytz
 from logging import getLogger
