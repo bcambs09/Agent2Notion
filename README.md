@@ -67,12 +67,19 @@ NOTION_PAGE_ID=<default_database_for_tasks>
 NOTION_MOVIE_DATABASE_ID=<movie_database_id_if_used>
 API_KEY=test-key               # used by the endpoint security
 ALLOWED_ORIGINS=*              # (optional) CORS
+NOTION_TOOL_DATA_BUCKET=<s3_bucket_for_tool_data>
+NOTION_TOOL_DATA_KEY=notion_tools_data.json   # (optional)
+NOTION_TOOL_DATA_PATH=./notion_tools_data.json  # (optional local override)
 ```
+If `NOTION_TOOL_DATA_PATH` is not set, the server will load `notion_tools_data.json` from the specified S3 bucket/key.
 
 ### (Optional) Pre-generate dynamic tool metadata
-Generating the summaries for every database/page can take >30 s the very first time. Run once and cache:
+Generating the summaries for every database/page can take >30 s the very first time. Run once and cache locally or upload to S3:
 ```bash
+# Local file
 $ python scripts/generate_notion_tool_data.py
+# Upload directly to S3
+$ python scripts/generate_notion_tool_data.py --bucket <your-bucket>
 ```
 
 ### Run the server
