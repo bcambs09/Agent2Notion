@@ -114,6 +114,14 @@ $ python scripts/send_test_request.py
 ```
 The script reads `SERVER_URL` and `API_KEY` from your environment (falls back to localhost/test-key).
 
+### Searching Notion
+```bash
+curl -X POST http://localhost:8000/search-notion \
+  -H "Authorization: Bearer test-key" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "meeting notes"}'
+```
+
 ---
 
 ## 🛠  Extending the Agent
