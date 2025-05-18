@@ -9,7 +9,6 @@ env:
   AWS_REGION: us-east-1
   ELASTIC_BEANSTALK_APP: Voice2NotionServer
   ELASTIC_BEANSTALK_ENV: Voice2NotionServer-env
-  NOTION_TOOL_DATA_BUCKET: notionserver
 
 jobs:
   deploy:
