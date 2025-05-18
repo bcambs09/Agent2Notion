@@ -4,3 +4,4 @@ __pycache__/
 .env
 .ebextensions/
 .DS_Store
+Voice2NotionServer/notion_tools_data.json

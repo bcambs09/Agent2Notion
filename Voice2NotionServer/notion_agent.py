@@ -99,30 +99,30 @@ else:
 
 # Base tools provided by the application
 base_tools = [
-    StructuredTool.from_function(
-        coroutine=create_new_task,
-        name="create_new_task",
-        description=(
-            "Create a new task in the Notion database.\n"
-            "Extract task details from natural language and fill the CreateTaskInput model.\n"
-            "Guidelines:\n"
-            "- Name: main action or objective\n"
-            "- Priority: Today, ASAP, High, Medium, Low, People (default ASAP)\n"
-            "- Due date: parse any date references\n"
-            "- Tags: infer from context\n"
-            "- Status: default 'Not started'\n"
-            "- Size: infer if mentioned\n\n"
-            "IMPORTANT: You must use the CreateTaskInput model when creating tasks. The model expects a dictionary of properties where each property is a NotionProperty object with:\n"
-            "- type: The type of the property (e.g., 'title', 'status', 'select')\n"
-            "- value: The property value formatted according to Notion's API structure\n"
-            "If information is missing, apply sensible defaults. The current time is {current_time}."
-        ),
-    ),
-    StructuredTool.from_function(
-        coroutine=add_to_movie_list,
-        name="add_to_movie_list",
-        description="Add a movie to the Notion movie list",
-    ),
+    # StructuredTool.from_function(
+    #     coroutine=create_new_task,
+    #     name="create_new_task",
+    #     description=(
+    #         "Create a new task in the Notion database.\n"
+    #         "Extract task details from natural language and fill the CreateTaskInput model.\n"
+    #         "Guidelines:\n"
+    #         "- Name: main action or objective\n"
+    #         "- Priority: Today, ASAP, High, Medium, Low, People (default ASAP)\n"
+    #         "- Due date: parse any date references\n"
+    #         "- Tags: infer from context\n"
+    #         "- Status: default 'Not started'\n"
+    #         "- Size: infer if mentioned\n\n"
+    #         "IMPORTANT: You must use the CreateTaskInput model when creating tasks. The model expects a dictionary of properties where each property is a NotionProperty object with:\n"
+    #         "- type: The type of the property (e.g., 'title', 'status', 'select')\n"
+    #         "- value: The property value formatted according to Notion's API structure\n"
+    #         "If information is missing, apply sensible defaults. The current time is {current_time}."
+    #     ),
+    # ),
+    # StructuredTool.from_function(
+    #     coroutine=add_to_movie_list,
+    #     name="add_to_movie_list",
+    #     description="Add a movie to the Notion movie list",
+    # ),
 ]
 
 # Final tool set combines static tools with dynamically generated ones
@@ -133,7 +133,7 @@ prompt = ChatPromptTemplate.from_messages([
         "system",
         "You are a helpful assistant that can add data to a user's Notion workspace."
         " Use the available tools to create tasks or add movies as requested."
-        " Choose the appropriate tool based on the user's prompt."
+        " Choose the appropriate tool based on the user's prompt. Current time is {current_time}."
     ),
     MessagesPlaceholder(variable_name="messages"),
 ])

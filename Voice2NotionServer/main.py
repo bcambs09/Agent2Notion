@@ -12,6 +12,12 @@ from notion_client import AsyncClient
 from notion_agent import chain
 from pydantic import BaseModel
 from langchain_core.messages import HumanMessage
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(name)s: %(message)s')
+logger = logging.getLogger(__name__)
+
 load_dotenv()
 
 app = FastAPI()
