@@ -4,6 +4,8 @@ import asyncio
 import re
 from typing import List, Tuple, Dict, Any
 
+import boto3
+
 from notion_client import AsyncClient
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
@@ -265,10 +267,27 @@ async def generate_and_cache_tool_metadata(file_path: str) -> List[Dict[str, Any
         json.dump(metadata, f, indent=2)
     return metadata
 
-
-def load_tool_data(file_path: str) -> List[Dict[str, Any]]:
+def _load_from_file(file_path: str) -> List[Dict[str, Any]]:
     with open(file_path, "r") as f:
         return json.load(f)
+
+
+def _load_from_s3(bucket: str, key: str) -> List[Dict[str, Any]]:
+    s3 = boto3.client("s3")
+    obj = s3.get_object(Bucket=bucket, Key=key)
+    logger.info(f"Loaded tool data from S3: {key}")
+    return json.loads(obj["Body"].read())
+
+
+def load_tool_data(file_path: str | None = None) -> List[Dict[str, Any]]:
+    """Load tool metadata from a local file or from S3 if file_path is None."""
+    if file_path:
+        return _load_from_file(file_path)
+    bucket = os.getenv("NOTION_TOOL_DATA_BUCKET")
+    if not bucket:
+        raise ValueError("NOTION_TOOL_DATA_BUCKET environment variable is required")
+    key = os.getenv("NOTION_TOOL_DATA_KEY", "notion_tools_data.json")
+    return _load_from_s3(bucket, key)
 
 
 def build_tools_from_data(data: List[Dict[str, Any]]) -> List[StructuredTool]:

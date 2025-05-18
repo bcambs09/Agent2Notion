@@ -12,3 +12,4 @@ pydantic
 pytz
 slowapi
 pytest
+boto3
