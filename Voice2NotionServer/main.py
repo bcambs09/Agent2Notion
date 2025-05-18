@@ -59,27 +59,6 @@ class TextInput(BaseModel):
 class NotionInput(BaseModel):
     prompt: str
 
-# @app.post("/process-audio")
-# @limiter.limit("5/minute")
-# async def process_audio(request: Request, file: UploadFile = File(...), api_key: str = Depends(get_api_key)):
-#     """Process audio file and create Notion content"""
-#     # TODO: Implement audio processing with Whisper
-#     return {"message": "Audio processing endpoint ready for implementation"}
-
-# @app.post("/process-text")
-# @limiter.limit("10/minute")
-# async def process_text(request: Request, input: TextInput, api_key: str = Depends(get_api_key)):
-#     """Process text input and create Notion content using the agent workflow"""
-#     # Initialize the state
-#     state = {
-#         "messages": [HumanMessage(content=input.text)],
-#     }
-    
-#     # Run the workflow
-#     result = await chain.ainvoke(state)
-    
-#     return {"message": "Text processed successfully", "result": result}
-
 @app.post("/add-to-notion")
 @limiter.limit("10/minute")
 async def add_to_notion(request: Request, input: NotionInput, api_key: str = Depends(get_api_key)):

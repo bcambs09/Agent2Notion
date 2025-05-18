@@ -51,7 +51,7 @@
       "get": {
         "summary": "Health Check",
         "description": "Health check endpoint",
-        "operationId": "health_check_health_get",
+        "operationId": "health_check",
         "responses": {
           "200": {
             "description": "Successful Response",
