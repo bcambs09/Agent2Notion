@@ -1,3 +1,4 @@
+from typing import Any, Dict
 from fastapi import FastAPI, UploadFile, File, Body, HTTPException, Depends, Security, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import APIKeyHeader, HTTPBearer, OAuth2PasswordBearer
@@ -29,7 +30,7 @@ load_dotenv()
 
 # Load metadata for pages/databases and filter guidance
 TOOL_DATA = load_tool_data_from_env()
-FILTER_GUIDE = Path(Path(__file__).resolve().parent.parent, "NOTION_FILTERS.md").read_text()
+FILTER_GUIDE = Path(Path(__file__).resolve().parent, "query_filter_agent_prompt.txt").read_text()
 
 app = FastAPI()
 
@@ -95,12 +96,6 @@ async def add_to_notion(request: Request, input: NotionInput, api_key: str = Dep
 @app.post("/search-notion")
 @limiter.limit("10/minute")
 async def search_notion(request: Request, input: SearchInput, api_key: str = Depends(get_api_key)):
-<<<<<<< HEAD
-    """Proxy a search query to the Notion search API"""
-    logger.info(f"Searching Notion for: {input.query}")
-    resp = await notion.search(query=input.query)
-    return resp
-=======
     """Run an LLM-powered search against cached Notion metadata."""
     logger.info("Running search agent for query: %s", input.query)
     agent_out = await run_search_agent(input.query, TOOL_DATA)
@@ -117,7 +112,6 @@ async def search_notion(request: Request, input: SearchInput, api_key: str = Dep
         databases[dbid] = await notion.databases.query(database_id=dbid, filter=filter_obj)
 
     return {"pages": pages, "databases": databases}
->>>>>>> c29c67a80edb841c094713f670888b9d6eacafd5
 
 @app.get("/health")
 @limiter.limit("30/minute")

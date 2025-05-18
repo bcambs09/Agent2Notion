@@ -281,7 +281,6 @@ async def generate_and_cache_tool_metadata(file_path: str) -> List[Dict[str, Any
         json.dump(metadata, f, indent=2)
     return metadata
 
-
 def load_tool_data(path: str | None) -> List[Dict[str, Any]]:
     """Load tool metadata from a local file or S3 object.
 
@@ -306,6 +305,12 @@ def load_tool_data(path: str | None) -> List[Dict[str, Any]]:
 
     with open(path, "r") as f:
         return json.load(f)
+
+
+async def generate_tool_metadata_json() -> str:
+    """Return the metadata as a pretty-printed JSON string (no disk I/O)."""
+    metadata = await build_tool_metadata()
+    return json.dumps(metadata, indent=2)
 
 
 def load_tool_data_from_env() -> List[Dict[str, Any]]:
@@ -343,10 +348,7 @@ async def run_search_agent(query: str, tool_data: List[Dict[str, Any]]) -> Searc
 
 async def build_db_filter(query: str, schema_json: str, guide_text: str) -> Dict[str, Any]:
     """Generate a Notion database filter object using an LLM."""
-    system = (
-        "Create a Notion database filter object that captures the intent of the search query. "
-        "Use the schema information and follow the examples below. Only return valid JSON.\n" + guide_text
-    )
+    system = guide_text
 
     prompt = ChatPromptTemplate.from_messages([
         ("system", system),
@@ -354,7 +356,7 @@ async def build_db_filter(query: str, schema_json: str, guide_text: str) -> Dict
     ])
 
     llm = ChatOpenAI(temperature=0)
-    resp = await llm.invoke(prompt.format_messages(query=query, schema=schema_json))
+    resp = await llm.ainvoke(prompt.format_messages(query=query, schema=schema_json))
 
     try:
         data = json.loads(resp.content)

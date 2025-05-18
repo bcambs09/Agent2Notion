@@ -139,4 +139,3 @@ You can combine filters and sorts in the same request:
     }
   ]
 }
-```
