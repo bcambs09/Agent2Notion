@@ -112,7 +112,31 @@ tools = [
             "- Tags: infer from context\n"
             "- Status: default 'Not started'\n"
             "- Size: infer if mentioned\n\n"
-            "Use NotionProperty objects formatted to Notion's API for each property.\n"
+
+            "IMPORTANT: You must use the CreateTaskInput model when creating tasks.
+            The model expects a dictionary of properties where each property is a NotionProperty object with:
+            - type: The type of the property (e.g., "title", "status", "select")
+            - value: The property value formatted according to Notion's API structure
+            
+            Example of correct property formatting:
+            {{
+                "properties": {{
+                    "Name": {{
+                        "type": "title",
+                        "value": {{"title": [{{"text": {{"content": "Task name"}}}}]}}
+                    }},
+                    "Status": {{
+                        "type": "status",
+                        "value": {{"status": {{"name": "Not started"}}}}
+                    }},
+                    "Priority": {{
+                        "type": "select",
+                        "value": {{"select": {{"name": "Medium"}}}}
+                    }}
+                }}
+            }}
+            
+            DO NOT ask for more information unless the input is completely unclear."
             "If information is missing, apply sensible defaults. The current time is {current_time}."""
         ),
     ),

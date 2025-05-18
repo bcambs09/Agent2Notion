@@ -9,7 +9,7 @@
       "post": {
         "summary": "Add To Notion",
         "description": "Process any user request to add data to Notion using the agent workflow",
-        "operationId": "add_to_notion_add_to_notion_post",
+        "operationId": "add_to_notion",
         "requestBody": {
           "content": {
             "application/json": {
