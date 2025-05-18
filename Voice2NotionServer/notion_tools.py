@@ -8,7 +8,7 @@ from notion_client import AsyncClient
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import StructuredTool
-from pydantic import BaseModel, Field
+from langchain_core.pydantic_v1 import BaseModel, Field
 
 from logging import getLogger
 logger = getLogger(__name__)
@@ -160,6 +160,20 @@ async def summarize_page(notion: AsyncClient, page: dict) -> str:
     return str(summary_raw)
 
 
+async def fetch_page_blocks(notion: AsyncClient, page_id: str) -> List[dict]:
+    """Return all block objects for the given page."""
+    blocks: List[dict] = []
+    cursor = None
+    while True:
+        resp = await notion.blocks.children.list(block_id=page_id, start_cursor=cursor)
+        blocks.extend(resp.get("results", []))
+        if resp.get("has_more"):
+            cursor = resp.get("next_cursor")
+        else:
+            break
+    return blocks
+
+
 def _db_tool_func(database_id: str):
     async def _func(entry: DatabaseEntryInput) -> str:
         notion = AsyncClient(auth=os.getenv("NOTION_TOKEN"))
@@ -266,9 +280,88 @@ async def generate_and_cache_tool_metadata(file_path: str) -> List[Dict[str, Any
     return metadata
 
 
-def load_tool_data(file_path: str) -> List[Dict[str, Any]]:
-    with open(file_path, "r") as f:
+def load_tool_data(path: str | None) -> List[Dict[str, Any]]:
+    """Load tool metadata from a local file or S3 object.
+
+    Args:
+        path: Local filesystem path or ``s3://bucket/key``. If ``None``,
+            defaults to ``notion_tools_data.json`` next to this module.
+
+    Returns:
+        Parsed JSON data from the given path.
+    """
+    if path is None:
+        path = os.path.join(os.path.dirname(__file__), "notion_tools_data.json")
+
+    if path.startswith("s3://"):
+        import boto3
+
+        bucket, key = path[5:].split("/", 1)
+        s3 = boto3.client("s3")
+        obj = s3.get_object(Bucket=bucket, Key=key)
+        data = obj["Body"].read().decode("utf-8")
+        return json.loads(data)
+
+    with open(path, "r") as f:
         return json.load(f)
+
+
+def load_tool_data_from_env() -> List[Dict[str, Any]]:
+    """Load tool metadata using the ``NOTION_TOOL_DATA_PATH`` environment variable."""
+    data_path = os.getenv("NOTION_TOOL_DATA_PATH")
+    return load_tool_data(data_path)
+
+
+class SearchAgentOutput(BaseModel):
+    """IDs for relevant pages and databases."""
+    page_ids: List[str] = []
+    database_ids: List[str] = []
+
+
+async def run_search_agent(query: str, tool_data: List[Dict[str, Any]]) -> SearchAgentOutput:
+    """Use an LLM to select relevant pages and databases from ``tool_data``."""
+    items_summary = "\n".join(
+        f"- {item['id']} ({item['type']}): {item.get('title', 'Untitled')} - {item.get('summary', '')}"
+        for item in tool_data
+    )
+
+    system = (
+        "Select the IDs of any pages or databases that are relevant to the user query. "
+        "Only return IDs from the provided list in JSON format with 'page_ids' and 'database_ids'."
+    )
+
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", system + "\nAvailable items:\n" + items_summary),
+        ("human", "{query}"),
+    ])
+
+    llm = ChatOpenAI(temperature=0).with_structured_output(SearchAgentOutput)
+    return await llm.ainvoke(prompt.format_messages(query=query))
+
+
+async def build_db_filter(query: str, schema_json: str, guide_text: str) -> Dict[str, Any]:
+    """Generate a Notion database filter object using an LLM."""
+    system = (
+        "Create a Notion database filter object that captures the intent of the search query. "
+        "Use the schema information and follow the examples below. Only return valid JSON.\n" + guide_text
+    )
+
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", system),
+        ("human", "Query: {query}\nSchema: {schema}"),
+    ])
+
+    llm = ChatOpenAI(temperature=0)
+    resp = await llm.invoke(prompt.format_messages(query=query, schema=schema_json))
+
+    try:
+        data = json.loads(resp.content)
+        if not isinstance(data, dict):
+            raise ValueError("Filter is not a JSON object")
+    except Exception as e:
+        logger.error("Invalid filter response from LLM: %s", e)
+        raise
+    return data
 
 
 def build_tools_from_data(data: List[Dict[str, Any]]) -> List[StructuredTool]:

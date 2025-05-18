@@ -10,15 +10,26 @@ import os
 from dotenv import load_dotenv
 from notion_client import AsyncClient
 from notion_agent import chain
-from pydantic import BaseModel
+from notion_tools import (
+    load_tool_data_from_env,
+    run_search_agent,
+    fetch_page_blocks,
+    build_db_filter,
+)
+from langchain_core.pydantic_v1 import BaseModel
 from langchain_core.messages import HumanMessage
 import logging
+from pathlib import Path
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(name)s: %(message)s')
 logger = logging.getLogger(__name__)
 
 load_dotenv()
+
+# Load metadata for pages/databases and filter guidance
+TOOL_DATA = load_tool_data_from_env()
+FILTER_GUIDE = Path(Path(__file__).resolve().parent.parent, "NOTION_FILTERS.md").read_text()
 
 app = FastAPI()
 
@@ -65,6 +76,9 @@ class TextInput(BaseModel):
 class NotionInput(BaseModel):
     prompt: str
 
+class SearchInput(BaseModel):
+    query: str
+
 @app.post("/add-to-notion")
 @limiter.limit("10/minute")
 async def add_to_notion(request: Request, input: NotionInput, api_key: str = Depends(get_api_key)):
@@ -76,6 +90,27 @@ async def add_to_notion(request: Request, input: NotionInput, api_key: str = Dep
     result = await chain.ainvoke(state)
 
     return {"message": "Request processed successfully", "result": result}
+
+
+@app.post("/search-notion")
+@limiter.limit("10/minute")
+async def search_notion(request: Request, input: SearchInput, api_key: str = Depends(get_api_key)):
+    """Run an LLM-powered search against cached Notion metadata."""
+    logger.info("Running search agent for query: %s", input.query)
+    agent_out = await run_search_agent(input.query, TOOL_DATA)
+
+    pages: Dict[str, Any] = {}
+    databases: Dict[str, Any] = {}
+
+    for pid in agent_out.page_ids:
+        pages[pid] = await fetch_page_blocks(notion, pid)
+
+    for dbid in agent_out.database_ids:
+        schema = next((it.get("schema") for it in TOOL_DATA if it["id"] == dbid), "{}")
+        filter_obj = await build_db_filter(input.query, schema, FILTER_GUIDE)
+        databases[dbid] = await notion.databases.query(database_id=dbid, filter=filter_obj)
+
+    return {"pages": pages, "databases": databases}
 
 @app.get("/health")
 @limiter.limit("30/minute")
