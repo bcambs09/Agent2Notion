@@ -16,6 +16,7 @@ from notion_tools import (
     run_search_agent,
     fetch_page_blocks,
     build_db_filter,
+    search_notion_data,
 )
 from langchain_core.pydantic_v1 import BaseModel
 from langchain_core.messages import HumanMessage
@@ -97,21 +98,8 @@ async def add_to_notion(request: Request, input: NotionInput, api_key: str = Dep
 @limiter.limit("10/minute")
 async def search_notion(request: Request, input: SearchInput, api_key: str = Depends(get_api_key)):
     """Run an LLM-powered search against cached Notion metadata."""
-    logger.info("Running search agent for query: %s", input.query)
-    agent_out = await run_search_agent(input.query, TOOL_DATA)
-
-    pages: Dict[str, Any] = {}
-    databases: Dict[str, Any] = {}
-
-    for pid in agent_out.page_ids:
-        pages[pid] = await fetch_page_blocks(notion, pid)
-
-    for dbid in agent_out.database_ids:
-        schema = next((it.get("schema") for it in TOOL_DATA if it["id"] == dbid), "{}")
-        filter_obj = await build_db_filter(input.query, schema, FILTER_GUIDE)
-        databases[dbid] = await notion.databases.query(database_id=dbid, filter=filter_obj)
-
-    return {"pages": pages, "databases": databases}
+    result = await search_notion_data(input.query, notion, TOOL_DATA, FILTER_GUIDE)
+    return result
 
 @app.get("/health")
 @limiter.limit("30/minute")

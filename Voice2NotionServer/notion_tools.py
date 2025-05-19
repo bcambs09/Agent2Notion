@@ -10,7 +10,7 @@ from notion_client import AsyncClient
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import StructuredTool
-from langchain_core.pydantic_v1 import BaseModel, Field
+from pydantic import BaseModel, Field
 
 from logging import getLogger
 logger = getLogger(__name__)
@@ -132,7 +132,7 @@ async def summarize_database(notion: AsyncClient, db: dict) -> str:
         ("system", "Summarize the provided Notion database."),
         ("human", "{text}")
     ])
-    llm = ChatOpenAI(temperature=0)
+    llm = ChatOpenAI(temperature=0, model="gpt-4o")
     summary_raw = (await llm.ainvoke(prompt.format_messages(text=content_for_llm))).content
     return str(summary_raw)
 
@@ -156,7 +156,7 @@ async def summarize_page(notion: AsyncClient, page: dict) -> str:
         ("system", "Provide a short summary of the following page content."),
         ("human", "{text}")
     ])
-    llm = ChatOpenAI(temperature=0)
+    llm = ChatOpenAI(temperature=0, model="gpt-4o")
     summary_raw = (await llm.ainvoke(prompt.format_messages(text=content_for_llm))).content
     # Ensure the returned value is a string to satisfy type checkers.
     return str(summary_raw)
@@ -321,8 +321,8 @@ def load_tool_data_from_env() -> List[Dict[str, Any]]:
 
 class SearchAgentOutput(BaseModel):
     """IDs for relevant pages and databases."""
-    page_ids: List[str] = []
-    database_ids: List[str] = []
+    page_ids: List[str] = Field(default_factory=list)
+    database_ids: List[str] = Field(default_factory=list)
 
 
 async def run_search_agent(query: str, tool_data: List[Dict[str, Any]]) -> SearchAgentOutput:
@@ -339,23 +339,30 @@ async def run_search_agent(query: str, tool_data: List[Dict[str, Any]]) -> Searc
 
     prompt = ChatPromptTemplate.from_messages([
         ("system", system + "\nAvailable items:\n" + items_summary),
-        ("human", "{query}"),
+        ("human", "The query to select relevant items from the list is: {query}"),
     ])
 
-    llm = ChatOpenAI(temperature=0).with_structured_output(SearchAgentOutput)
+    llm = ChatOpenAI(temperature=0, model="gpt-4o").with_structured_output(SearchAgentOutput)
     return await llm.ainvoke(prompt.format_messages(query=query))
 
 
 async def build_db_filter(query: str, schema_json: str, guide_text: str) -> Dict[str, Any]:
     """Generate a Notion database filter object using an LLM."""
-    system = guide_text
+    # ChatPromptTemplate uses Python str.format under the hood to substitute
+    # placeholders (e.g. "{query}"). Any literal curly-brace characters that
+    # appear in the `guide_text` therefore need to be escaped ("{{" / "}}").
+    # Otherwise the template engine will attempt to treat them as additional
+    # placeholders and raise a KeyError (for example on a string like
+    # "{"equals": true}").
+
+    system = guide_text.replace("{", "{{").replace("}", "}}")
 
     prompt = ChatPromptTemplate.from_messages([
         ("system", system),
         ("human", "Query: {query}\nSchema: {schema}"),
     ])
 
-    llm = ChatOpenAI(temperature=0)
+    llm = ChatOpenAI(temperature=0, model="gpt-4o", model_kwargs={"response_format": {"type": "json_object"}})
     resp = await llm.ainvoke(prompt.format_messages(query=query, schema=schema_json))
 
     try:
@@ -399,3 +406,61 @@ def build_tools_from_data(data: List[Dict[str, Any]]) -> List[StructuredTool]:
                 )
             )
     return tools
+
+# === High-level search helper =================================================
+# This function centralises the logic originally implemented inside the FastAPI
+# endpoint in main.py so that it can be reused in other contexts (e.g. unit
+# tests, CLI tools, etc.) and keeps main.py thin.
+
+async def search_notion_data(
+    query: str,
+    notion: AsyncClient,
+    tool_data: List[Dict[str, Any]],
+    filter_guide: str,
+) -> Dict[str, Any]:
+    """Run an LLM-powered search over Notion content.
+
+    Parameters
+    ----------
+    query : str
+        The natural-language query provided by the caller.
+    notion : AsyncClient
+        An already-configured Notion client instance.
+    tool_data : List[Dict[str, Any]]
+        Cached metadata describing pages and databases (as produced by
+        ``build_tool_metadata`` and persisted via ``generate_tool_metadata_json``).
+    filter_guide : str
+        Prompt text that guides the LLM when building database filter objects.
+
+    Returns
+    -------
+    Dict[str, Any]
+        A mapping with two keys:
+        * ``"pages"`` – mapping of page_id → list[block] (full block objects).
+        * ``"databases"`` – mapping of database_id → query results returned by
+          the Notion API for that DB (after applying an LLM-generated filter).
+    """
+    logger.info("Running search agent for query: %s", query)
+
+    # Ask the LLM which pages and databases are relevant.
+    agent_out = await run_search_agent(query, tool_data)
+
+    pages: Dict[str, Any] = {}
+    databases: Dict[str, Any] = {}
+
+    # Fetch full block contents for each relevant page so that the caller
+    # receives the complete context and can decide what to display.
+    for pid in agent_out.page_ids:
+        pages[pid] = await fetch_page_blocks(notion, pid)
+
+    # For databases we need an additional step: build a filter so that the
+    # resulting query only returns rows that match the user's intent.
+    for dbid in agent_out.database_ids:
+        # tool_data items store the raw Notion schema JSON (a *string*).
+        raw_schema = next((it.get("schema") for it in tool_data if it["id"] == dbid), None)
+        schema_json: str = raw_schema if isinstance(raw_schema, str) else "{}"
+
+        filter_obj = await build_db_filter(query, schema_json, filter_guide)
+        databases[dbid] = await notion.databases.query(database_id=dbid, filter=filter_obj["filter"])
+
+    return {"pages": pages, "databases": databases}
