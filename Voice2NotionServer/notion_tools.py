@@ -309,6 +309,7 @@ def load_tool_data(path: str | None) -> List[Dict[str, Any]]:
     try:
         obj = s3.get_object(Bucket=bucket, Key=key)
         data = obj["Body"].read().decode("utf-8")
+        logger.info("Loaded tool data from s3://%s/%s", bucket, key)
         return json.loads(data)
     except Exception as e:  # pragma: no cover - network errors
         logger.info(
@@ -356,6 +357,7 @@ def load_db_instructions(path: str | None) -> Dict[str, str]:
     try:
         obj = s3.get_object(Bucket=bucket, Key=filename)
         data = obj["Body"].read().decode("utf-8")
+        logger.info("Loaded DB instructions from s3://%s/%s", bucket, filename)
         return json.loads(data)
     except Exception as e:  # pragma: no cover - network errors
         logger.info(
