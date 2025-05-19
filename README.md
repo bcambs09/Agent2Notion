@@ -32,8 +32,8 @@ Client ─▶ /add-to-notion  ─┐
    * `notion_chat` – a GPT-4o reasoning step bound to the available tools.
    * `tools` – executes whichever tool the model selects.
 3. **Tool catalogue**
-   * **Static tools**: `create_new_task`, `add_to_movie_list`.
-   * **Dynamic tools**: At start-up `notion_tools.py` scans every database & page your Notion token
+   * **Static tools**: Optionally add your own static tools
+   * **Dynamic tools**: `notion_tools.py` scans every database & page your Notion token
      can access, creates a `StructuredTool` for each, and stores a lightweight description in
      `notion_tools_data.json` for fast reloads.
 4. The graph loops ⟲ between `notion_chat` and `tools` until the model signals `END`, then the server
