@@ -13,9 +13,9 @@ from notion_client import AsyncClient
 from notion_agent import chain
 from notion_tools import (
     load_tool_data_from_env,
+    load_db_instructions_from_env,
     run_search_agent,
     fetch_page_blocks,
-    build_db_filter,
     search_notion_data,
 )
 from langchain_core.pydantic_v1 import BaseModel
@@ -34,6 +34,7 @@ TOOL_DATA = load_tool_data_from_env()
 if TOOL_DATA is None:
     raise ValueError("TOOL_DATA is not set")
 FILTER_GUIDE = Path(Path(__file__).resolve().parent, "query_filter_agent_prompt.txt").read_text()
+DB_INSTRUCTIONS = load_db_instructions_from_env()
 
 app = FastAPI()
 
@@ -100,7 +101,13 @@ async def add_to_notion(request: Request, input: NotionInput, api_key: str = Dep
 @limiter.limit("10/minute")
 async def search_notion(request: Request, input: SearchInput, api_key: str = Depends(get_api_key)):
     """Run an LLM-powered search against cached Notion metadata."""
-    result = await search_notion_data(input.query, notion, TOOL_DATA, FILTER_GUIDE)
+    result = await search_notion_data(
+        input.query,
+        notion,
+        TOOL_DATA,
+        FILTER_GUIDE,
+        DB_INSTRUCTIONS,
+    )
     return result
 
 @app.get("/health")

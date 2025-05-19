@@ -36,6 +36,7 @@ async def _async_main() -> None:
         notion=AsyncClient(auth=os.environ.get("NOTION_TOKEN")),
         tool_data=tools,
         filter_guide=filter_guide,
+        db_instructions={},
     )
 
     print("search_notion_data returned:")

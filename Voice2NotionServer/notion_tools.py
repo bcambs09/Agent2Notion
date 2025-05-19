@@ -284,29 +284,39 @@ async def generate_and_cache_tool_metadata(file_path: str) -> List[Dict[str, Any
     return metadata
 
 def load_tool_data(path: str | None) -> List[Dict[str, Any]]:
-    """Load tool metadata from a local file or S3 object.
+    """Load tool metadata from S3 or a local override.
 
-    Args:
-        path: Local filesystem path or ``s3://bucket/key``. If ``None``,
-            defaults to ``notion_tools_data.json`` next to this module.
+    Parameters
+    ----------
+    path : str | None
+        Optional local file path. If ``None`` the metadata is loaded from the S3
+        bucket specified by ``NOTION_TOOL_DATA_BUCKET`` (default ``notionserver``)
+        using the key given by ``NOTION_TOOL_DATA_KEY`` (default
+        ``notion_tools_data.json``).
 
-    Returns:
-        Parsed JSON data from the given path.
+    Returns
+    -------
+    list[dict]
+        Parsed JSON data describing available pages and databases.
     """
-    if path is None:
-        path = os.path.join(os.path.dirname(__file__), "notion_tools_data.json")
+    if path is not None:
+        with open(path, "r") as f:
+            return json.load(f)
 
-    if path.startswith("s3://"):
-        import boto3
-
-        bucket, key = path[5:].split("/", 1)
-        s3 = boto3.client("s3")
+    bucket = os.getenv("NOTION_TOOL_DATA_BUCKET", "notionserver")
+    key = os.getenv("NOTION_TOOL_DATA_KEY", "notion_tools_data.json")
+    s3 = boto3.client("s3")
+    try:
         obj = s3.get_object(Bucket=bucket, Key=key)
         data = obj["Body"].read().decode("utf-8")
         return json.loads(data)
-
-    with open(path, "r") as f:
-        return json.load(f)
+    except Exception as e:  # pragma: no cover - network errors
+        logger.info(
+            "Failed to load tool data from s3://%s/%s: %s", bucket, key, e
+        )
+        local_path = os.path.join(os.path.dirname(__file__), key)
+        with open(local_path, "r") as f:
+            return json.load(f)
 
 
 async def generate_tool_metadata_json() -> str:
@@ -319,6 +329,47 @@ def load_tool_data_from_env() -> List[Dict[str, Any]]:
     """Load tool metadata using the ``NOTION_TOOL_DATA_PATH`` environment variable."""
     data_path = os.getenv("NOTION_TOOL_DATA_PATH")
     return load_tool_data(data_path)
+
+
+def load_db_instructions(path: str | None) -> Dict[str, str]:
+    """Load database-specific instructions from S3 or a local override.
+
+    Parameters
+    ----------
+    path : str | None
+        Optional local file path. If ``None`` the instructions are loaded from
+        the S3 bucket defined by ``NOTION_TOOL_DATA_BUCKET`` (default
+        ``notionserver``) using the filename ``db_custom_instructions.json``.
+
+    Returns
+    -------
+    Dict[str, str]
+        Mapping of database ID → custom instruction text.
+    """
+    filename = "db_custom_instructions.json"
+    if path is not None:
+        with open(path, "r") as f:
+            return json.load(f)
+
+    bucket = os.getenv("NOTION_TOOL_DATA_BUCKET", "notionserver")
+    s3 = boto3.client("s3")
+    try:
+        obj = s3.get_object(Bucket=bucket, Key=filename)
+        data = obj["Body"].read().decode("utf-8")
+        return json.loads(data)
+    except Exception as e:  # pragma: no cover - network errors
+        logger.info(
+            "Failed to load DB instructions from s3://%s/%s: %s", bucket, filename, e
+        )
+        local_path = os.path.join(os.path.dirname(__file__), filename)
+        with open(local_path, "r") as f:
+            return json.load(f)
+
+
+def load_db_instructions_from_env() -> Dict[str, str]:
+    """Load database instruction mapping using ``NOTION_DB_INSTRUCTIONS_PATH``."""
+    instr_path = os.getenv("NOTION_DB_INSTRUCTIONS_PATH")
+    return load_db_instructions(instr_path)
 
 
 class SearchAgentOutput(BaseModel):
@@ -349,8 +400,18 @@ async def run_search_agent(query: str, tool_data: List[Dict[str, Any]]) -> Searc
     return cast(SearchAgentOutput, await llm.ainvoke(prompt.format_messages(query=query)))
 
 
-async def build_db_filter(query: str, schema_json: str, guide_text: str) -> Dict[str, Any]:
-    """Generate a Notion database filter object using an LLM."""
+async def build_db_filter(
+    query: str,
+    schema_json: str,
+    guide_text: str,
+    db_id: str,
+    custom_instructions: Dict[str, str] | None = None,
+) -> Dict[str, Any]:
+    """Generate a Notion database filter object using an LLM.
+
+    If ``custom_instructions`` contains an entry for ``db_id`` the associated
+    text is appended to the system prompt before invoking the LLM.
+    """
     # ChatPromptTemplate uses Python str.format under the hood to substitute
     # placeholders (e.g. "{query}"). Any literal curly-brace characters that
     # appear in the `guide_text` therefore need to be escaped ("{{" / "}}").
@@ -358,7 +419,11 @@ async def build_db_filter(query: str, schema_json: str, guide_text: str) -> Dict
     # placeholders and raise a KeyError (for example on a string like
     # "{"equals": true}").
 
-    system = guide_text.replace("{", "{{").replace("}", "}}")
+    custom = ""
+    if custom_instructions and db_id in custom_instructions:
+        custom = "\n" + custom_instructions[db_id]
+
+    system = (guide_text + custom).replace("{", "{{").replace("}", "}}")
 
     prompt = ChatPromptTemplate.from_messages([
         ("system", system),
@@ -492,6 +557,7 @@ async def search_notion_data(
     notion: AsyncClient,
     tool_data: List[Dict[str, Any]],
     filter_guide: str,
+    db_instructions: Dict[str, str] | None = None,
 ) -> Dict[str, Any]:
     """Run an LLM-powered search over Notion content.
 
@@ -506,6 +572,9 @@ async def search_notion_data(
         ``build_tool_metadata`` and persisted via ``generate_tool_metadata_json``).
     filter_guide : str
         Prompt text that guides the LLM when building database filter objects.
+    db_instructions : Dict[str, str] | None
+        Optional mapping of database IDs to additional instructions that should
+        be appended to the system prompt when building filters.
 
     Returns
     -------
@@ -538,7 +607,13 @@ async def search_notion_data(
         raw_schema = next((it.get("schema") for it in tool_data if it["id"] == dbid), None)
         schema_json: str = raw_schema if isinstance(raw_schema, str) else "{}"
 
-        filter_obj = await build_db_filter(query, schema_json, filter_guide)
+        filter_obj = await build_db_filter(
+            query,
+            schema_json,
+            filter_guide,
+            dbid,
+            db_instructions,
+        )
         raw_resp = await notion.databases.query(database_id=dbid, filter=filter_obj["filter"])
         databases[dbid] = _simplify_database_query(raw_resp)
 
