@@ -68,9 +68,10 @@ NOTION_PAGE_ID=<default_database_for_tasks>
 NOTION_MOVIE_DATABASE_ID=<movie_database_id_if_used>
 API_KEY=test-key               # used by the endpoint security
 ALLOWED_ORIGINS=*              # (optional) CORS
-NOTION_TOOL_DATA_BUCKET=<s3_bucket_for_tool_data>
+NOTION_TOOL_DATA_BUCKET=<s3_bucket_for_tool_data>  # defaults to "notionserver"
 NOTION_TOOL_DATA_KEY=notion_tools_data.json   # (optional)
 NOTION_TOOL_DATA_PATH=./notion_tools_data.json  # (optional local override)
+NOTION_DB_INSTRUCTIONS_PATH=./db_custom_instructions.json  # (optional local override)
 EB_ENVIRONMENT_NAME=<elastic_beanstalk_env>  # used by the daily refresh Lambda
 LAMBDA_EXECUTION_ROLE_ARN="<LAMBDA_EXECUTION_ROLE_ARN>"
 SCHEMA_REFRESH_CODE_BUCKET="<SCHEMA_REFRESH_CODE_BUCKET>"
@@ -78,7 +79,8 @@ LAMBDA_NAME="<DESIRED_SCHEMA_UPDATE_LAMBDA_NAME>"
 LAMBDA_ARN="<CREATED_LAMBDA_ARN>"
 RULE_NAME="<DESIRED_CRON_RULE_NAME>"
 ```
-If `NOTION_TOOL_DATA_PATH` is not set, the server will load `notion_tools_data.json` from the specified S3 bucket/key.
+If `NOTION_TOOL_DATA_PATH` is not set, the server loads `notion_tools_data.json` from the specified S3 bucket/key.
+If `NOTION_DB_INSTRUCTIONS_PATH` is not set, the server loads `db_custom_instructions.json` from the same S3 bucket. Set the variable to use a local override instead.
 
 ### (Optional) Pre-generate dynamic tool metadata
 Generating the summaries for every database/page can take >30 s the very first time. Run once and cache locally or upload to S3:
