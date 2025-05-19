@@ -62,6 +62,7 @@ $ pip install -r requirements.txt
 
 # 4. Environment variables (create .env)
 OPENAI_API_KEY=sk-...
+OPENAI_MODEL=gpt-4o              # (optional) default model name
 NOTION_TOKEN=secret_...
 NOTION_PAGE_ID=<default_database_for_tasks>
 NOTION_MOVIE_DATABASE_ID=<movie_database_id_if_used>
