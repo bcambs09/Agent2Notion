@@ -31,6 +31,8 @@ load_dotenv()
 
 # Load metadata for pages/databases and filter guidance
 TOOL_DATA = load_tool_data_from_env()
+if TOOL_DATA is None:
+    raise ValueError("TOOL_DATA is not set")
 FILTER_GUIDE = Path(Path(__file__).resolve().parent, "query_filter_agent_prompt.txt").read_text()
 
 app = FastAPI()
