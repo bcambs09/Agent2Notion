@@ -10,7 +10,6 @@ import asyncio
 import os
 from datetime import datetime
 from dotenv import load_dotenv
-from langchain_core.pydantic_v1 import BaseModel, Field
 from notion_tools import (
     generate_and_cache_tool_metadata,
     load_tool_data_from_env,

@@ -18,7 +18,7 @@ from notion_tools import (
     fetch_page_blocks,
     search_notion_data,
 )
-from langchain_core.pydantic_v1 import BaseModel
+from pydantic import BaseModel
 from langchain_core.messages import HumanMessage
 import logging
 from pathlib import Path
