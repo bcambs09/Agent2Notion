@@ -101,7 +101,7 @@ async def search_notion(request: Request, input: SearchInput, api_key: str = Dep
     result = await search_notion_data(input.query, notion, TOOL_DATA, FILTER_GUIDE)
     return result
 
-@app.get("/health", include_in_schema=False)
+@app.get("/health")
 @limiter.limit("30/minute")
 async def health_check(request: Request):
     """Health check endpoint"""
