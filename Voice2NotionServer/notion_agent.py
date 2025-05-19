@@ -38,9 +38,7 @@ try:
     if not tool_data:
         raise ValueError("No tool data found")
 except Exception as e:
-    logger.error("Unable to load tool data: %s", e)
-    DATA_FILE = os.path.join(os.path.dirname(__file__), "notion_tools_data.json")
-    tool_data = asyncio.run(generate_and_cache_tool_metadata(DATA_FILE))
+    exit(1)
 
 dynamic_tools = build_tools_from_data(tool_data)
 
