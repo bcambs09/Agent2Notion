@@ -22,6 +22,7 @@ from logging import getLogger
 logger = getLogger(__name__)
 
 load_dotenv()
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")
 
 set_debug(True)
 set_verbose(True)
@@ -60,7 +61,7 @@ prompt = ChatPromptTemplate.from_messages([
 ])
 
 # Create the LLM
-llm = ChatOpenAI(temperature=0, model="gpt-4o")
+llm = ChatOpenAI(temperature=0, model=OPENAI_MODEL)
 llm_with_tools = llm.bind_tools(tools)
 
 def notion_chat(state: AgentState) -> AgentState:

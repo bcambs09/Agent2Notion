@@ -8,6 +8,8 @@ import boto3
 
 from notion_client import AsyncClient
 from langchain_openai import ChatOpenAI
+
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import StructuredTool
 from pydantic import BaseModel, Field
@@ -132,7 +134,7 @@ async def summarize_database(notion: AsyncClient, db: dict) -> str:
         ("system", "Summarize the provided Notion database."),
         ("human", "{text}")
     ])
-    llm = ChatOpenAI(temperature=0, model="gpt-4o")
+    llm = ChatOpenAI(temperature=0, model=OPENAI_MODEL)
     summary_raw = (await llm.ainvoke(prompt.format_messages(text=content_for_llm))).content
     return str(summary_raw)
 
@@ -156,7 +158,7 @@ async def summarize_page(notion: AsyncClient, page: dict) -> str:
         ("system", "Provide a short summary of the following page content."),
         ("human", "{text}")
     ])
-    llm = ChatOpenAI(temperature=0, model="gpt-4o")
+    llm = ChatOpenAI(temperature=0, model=OPENAI_MODEL)
     summary_raw = (await llm.ainvoke(prompt.format_messages(text=content_for_llm))).content
     # Ensure the returned value is a string to satisfy type checkers.
     return str(summary_raw)
@@ -342,7 +344,7 @@ async def run_search_agent(query: str, tool_data: List[Dict[str, Any]]) -> Searc
         ("human", "The query to select relevant items from the list is: {query}"),
     ])
 
-    llm = ChatOpenAI(temperature=0, model="gpt-4o").with_structured_output(SearchAgentOutput)
+    llm = ChatOpenAI(temperature=0, model=OPENAI_MODEL).with_structured_output(SearchAgentOutput)
     from typing import cast
     return cast(SearchAgentOutput, await llm.ainvoke(prompt.format_messages(query=query)))
 
@@ -363,7 +365,7 @@ async def build_db_filter(query: str, schema_json: str, guide_text: str) -> Dict
         ("human", "Query: {query}\nSchema: {schema}"),
     ])
 
-    llm = ChatOpenAI(temperature=0, model="gpt-4o", model_kwargs={"response_format": {"type": "json_object"}})
+    llm = ChatOpenAI(temperature=0, model=OPENAI_MODEL, model_kwargs={"response_format": {"type": "json_object"}})
     resp = await llm.ainvoke(prompt.format_messages(query=query, schema=schema_json))
 
     try:
