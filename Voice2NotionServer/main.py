@@ -1,3 +1,4 @@
+from typing import Any, Dict
 from fastapi import FastAPI, UploadFile, File, Body, HTTPException, Depends, Security, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import APIKeyHeader, HTTPBearer, OAuth2PasswordBearer
@@ -10,15 +11,27 @@ import os
 from dotenv import load_dotenv
 from notion_client import AsyncClient
 from notion_agent import chain
-from pydantic import BaseModel
+from notion_tools import (
+    load_tool_data_from_env,
+    run_search_agent,
+    fetch_page_blocks,
+    build_db_filter,
+    search_notion_data,
+)
+from langchain_core.pydantic_v1 import BaseModel
 from langchain_core.messages import HumanMessage
 import logging
+from pathlib import Path
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(name)s: %(message)s')
 logger = logging.getLogger(__name__)
 
 load_dotenv()
+
+# Load metadata for pages/databases and filter guidance
+TOOL_DATA = load_tool_data_from_env()
+FILTER_GUIDE = Path(Path(__file__).resolve().parent, "query_filter_agent_prompt.txt").read_text()
 
 app = FastAPI()
 
@@ -68,9 +81,6 @@ class NotionInput(BaseModel):
 class SearchInput(BaseModel):
     query: str
 
-class QueryInput(BaseModel):
-    query: str
-
 @app.post("/add-to-notion")
 @limiter.limit("10/minute")
 async def add_to_notion(request: Request, input: NotionInput, api_key: str = Depends(get_api_key)):
@@ -83,23 +93,15 @@ async def add_to_notion(request: Request, input: NotionInput, api_key: str = Dep
 
     return {"message": "Request processed successfully", "result": result}
 
+
 @app.post("/search-notion")
 @limiter.limit("10/minute")
 async def search_notion(request: Request, input: SearchInput, api_key: str = Depends(get_api_key)):
-    """Sends a search query to Notion to find relevant data"""
-    logger.info(f"Searching Notion for: {input.query}")
-    resp = await notion.search(query=input.query)
-    return resp
+    """Run an LLM-powered search against cached Notion metadata."""
+    result = await search_notion_data(input.query, notion, TOOL_DATA, FILTER_GUIDE)
+    return result
 
-@app.post("/query-notion")
-@limiter.limit("100/minute")
-async def query_notion(request: Request, input: QueryInput, api_key: str = Depends(get_api_key)):
-    """Send a high level search to identify find relevant pages and databases whose titles match the query"""
-    logger.info(f"Querying Notion for: {input.query}")
-    resp = await notion.databases(database_id=input.database_id)
-    return resp
-
-@app.get("/health")
+@app.get("/health", include_in_schema=False)
 @limiter.limit("30/minute")
 async def health_check(request: Request):
     """Health check endpoint"""

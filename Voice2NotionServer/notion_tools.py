@@ -132,7 +132,7 @@ async def summarize_database(notion: AsyncClient, db: dict) -> str:
         ("system", "Summarize the provided Notion database."),
         ("human", "{text}")
     ])
-    llm = ChatOpenAI(temperature=0)
+    llm = ChatOpenAI(temperature=0, model="gpt-4o")
     summary_raw = (await llm.ainvoke(prompt.format_messages(text=content_for_llm))).content
     return str(summary_raw)
 
@@ -156,10 +156,24 @@ async def summarize_page(notion: AsyncClient, page: dict) -> str:
         ("system", "Provide a short summary of the following page content."),
         ("human", "{text}")
     ])
-    llm = ChatOpenAI(temperature=0)
+    llm = ChatOpenAI(temperature=0, model="gpt-4o")
     summary_raw = (await llm.ainvoke(prompt.format_messages(text=content_for_llm))).content
     # Ensure the returned value is a string to satisfy type checkers.
     return str(summary_raw)
+
+
+async def fetch_page_blocks(notion: AsyncClient, page_id: str) -> List[dict]:
+    """Return all block objects for the given page."""
+    blocks: List[dict] = []
+    cursor = None
+    while True:
+        resp = await notion.blocks.children.list(block_id=page_id, start_cursor=cursor)
+        blocks.extend(resp.get("results", []))
+        if resp.get("has_more"):
+            cursor = resp.get("next_cursor")
+        else:
+            break
+    return blocks
 
 
 def _db_tool_func(database_id: str):
@@ -267,32 +281,99 @@ async def generate_and_cache_tool_metadata(file_path: str) -> List[Dict[str, Any
         json.dump(metadata, f, indent=2)
     return metadata
 
+def load_tool_data(path: str | None) -> List[Dict[str, Any]]:
+    """Load tool metadata from a local file or S3 object.
+
+    Args:
+        path: Local filesystem path or ``s3://bucket/key``. If ``None``,
+            defaults to ``notion_tools_data.json`` next to this module.
+
+    Returns:
+        Parsed JSON data from the given path.
+    """
+    if path is None:
+        path = os.path.join(os.path.dirname(__file__), "notion_tools_data.json")
+
+    if path.startswith("s3://"):
+        import boto3
+
+        bucket, key = path[5:].split("/", 1)
+        s3 = boto3.client("s3")
+        obj = s3.get_object(Bucket=bucket, Key=key)
+        data = obj["Body"].read().decode("utf-8")
+        return json.loads(data)
+
+    with open(path, "r") as f:
+        return json.load(f)
+
+
 async def generate_tool_metadata_json() -> str:
     """Return the metadata as a pretty-printed JSON string (no disk I/O)."""
     metadata = await build_tool_metadata()
     return json.dumps(metadata, indent=2)
 
-def _load_from_file(file_path: str) -> List[Dict[str, Any]]:
-    with open(file_path, "r") as f:
-        return json.load(f)
+
+def load_tool_data_from_env() -> List[Dict[str, Any]]:
+    """Load tool metadata using the ``NOTION_TOOL_DATA_PATH`` environment variable."""
+    data_path = os.getenv("NOTION_TOOL_DATA_PATH")
+    return load_tool_data(data_path)
 
 
-def _load_from_s3(bucket: str, key: str) -> List[Dict[str, Any]]:
-    s3 = boto3.client("s3")
-    obj = s3.get_object(Bucket=bucket, Key=key)
-    logger.info(f"Loaded tool data from S3: {key}")
-    return json.loads(obj["Body"].read())
+class SearchAgentOutput(BaseModel):
+    """IDs for relevant pages and databases."""
+    page_ids: List[str] = Field(default_factory=list)
+    database_ids: List[str] = Field(default_factory=list)
 
 
-def load_tool_data(file_path: str | None = None) -> List[Dict[str, Any]]:
-    """Load tool metadata from a local file or from S3 if file_path is None."""
-    if file_path:
-        return _load_from_file(file_path)
-    bucket = os.getenv("NOTION_TOOL_DATA_BUCKET")
-    if not bucket:
-        raise ValueError("NOTION_TOOL_DATA_BUCKET environment variable is required")
-    key = os.getenv("NOTION_TOOL_DATA_KEY", "notion_tools_data.json")
-    return _load_from_s3(bucket, key)
+async def run_search_agent(query: str, tool_data: List[Dict[str, Any]]) -> SearchAgentOutput:
+    """Use an LLM to select relevant pages and databases from ``tool_data``."""
+    items_summary = "\n".join(
+        f"- {item['id']} ({item['type']}): {item.get('title', 'Untitled')} - {item.get('summary', '')}"
+        for item in tool_data
+    )
+
+    system = (
+        "Select the IDs of any pages or databases that are relevant to the user query. "
+        "Only return IDs from the provided list in JSON format with 'page_ids' and 'database_ids'."
+    )
+
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", system + "\nAvailable items:\n" + items_summary),
+        ("human", "The query to select relevant items from the list is: {query}"),
+    ])
+
+    llm = ChatOpenAI(temperature=0, model="gpt-4o").with_structured_output(SearchAgentOutput)
+    from typing import cast
+    return cast(SearchAgentOutput, await llm.ainvoke(prompt.format_messages(query=query)))
+
+
+async def build_db_filter(query: str, schema_json: str, guide_text: str) -> Dict[str, Any]:
+    """Generate a Notion database filter object using an LLM."""
+    # ChatPromptTemplate uses Python str.format under the hood to substitute
+    # placeholders (e.g. "{query}"). Any literal curly-brace characters that
+    # appear in the `guide_text` therefore need to be escaped ("{{" / "}}").
+    # Otherwise the template engine will attempt to treat them as additional
+    # placeholders and raise a KeyError (for example on a string like
+    # "{"equals": true}").
+
+    system = guide_text.replace("{", "{{").replace("}", "}}")
+
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", system),
+        ("human", "Query: {query}\nSchema: {schema}"),
+    ])
+
+    llm = ChatOpenAI(temperature=0, model="gpt-4o", model_kwargs={"response_format": {"type": "json_object"}})
+    resp = await llm.ainvoke(prompt.format_messages(query=query, schema=schema_json))
+
+    try:
+        data = json.loads(resp.content)
+        if not isinstance(data, dict):
+            raise ValueError("Filter is not a JSON object")
+    except Exception as e:
+        logger.error("Invalid filter response from LLM: %s", e)
+        raise
+    return data
 
 
 def build_tools_from_data(data: List[Dict[str, Any]]) -> List[StructuredTool]:
@@ -326,3 +407,137 @@ def build_tools_from_data(data: List[Dict[str, Any]]) -> List[StructuredTool]:
                 )
             )
     return tools
+
+# === Helper functions for plain-text extraction =====================================
+def _rich_text_to_str(rich_list: List[dict]) -> str:
+    """Return concatenated plain_text from a Notion rich_text list."""
+    return "".join(rt.get("plain_text", "") for rt in rich_list or [])
+
+
+def _extract_property_value(prop: dict) -> Any:
+    """Return a simplified Python value for a Notion property object.
+
+    The goal is to surface the human-readable text or primitive scalar so that
+    downstream callers don't need to understand the full Notion API schema.
+    """
+    if not isinstance(prop, dict):
+        return prop  # Fallback – unexpected shape.
+
+    typ = prop.get("type")
+
+    match typ:
+        case "title":
+            return _rich_text_to_str(prop.get("title", []))
+        case "rich_text":
+            return _rich_text_to_str(prop.get("rich_text", []))
+        case "number":
+            return prop.get("number")
+        case "checkbox":
+            return prop.get("checkbox")
+        case "select":
+            sel = prop.get("select")
+            return sel.get("name") if sel else None
+        case "multi_select":
+            return [opt.get("name") for opt in prop.get("multi_select", [])]
+        case "date":
+            return prop.get("date")  # Caller can decide which field(s) to use.
+        case "status":
+            status = prop.get("status")
+            return status.get("name") if status else None
+        case _:
+            # For unsupported/unknown types, return the raw object so that
+            # information isn't lost (callers can inspect if needed).
+            return prop.get(typ)
+
+
+def _blocks_to_text(blocks: List[dict]) -> str:
+    """Concatenate all rich_text from a list of block objects."""
+    parts: List[str] = []
+    for blk in blocks:
+        blk_type = blk.get("type")
+        if not blk_type:
+            continue
+        rich = blk.get(blk_type, {}).get("rich_text", [])
+        if rich:
+            parts.append(_rich_text_to_str(rich))
+    return "\n".join(parts)
+
+
+def _simplify_database_query(resp: dict) -> List[Dict[str, Any]]:
+    """Convert the Notion database query API response into a lightweight form.
+
+    Each row is reduced to::
+
+        {
+            "id": <page_id>,
+            "properties": {<prop_name>: <simplified value>, ...}
+        }
+    """
+    simplified: List[Dict[str, Any]] = []
+    for page in resp.get("results", []):
+        props = page.get("properties", {})
+        simplified_props = {name: _extract_property_value(pval) for name, pval in props.items()}
+        simplified.append({"id": page.get("id"), "properties": simplified_props})
+    return simplified
+
+# === High-level search helper =================================================
+# This function centralises the logic originally implemented inside the FastAPI
+# endpoint in main.py so that it can be reused in other contexts (e.g. unit
+# tests, CLI tools, etc.) and keeps main.py thin.
+
+async def search_notion_data(
+    query: str,
+    notion: AsyncClient,
+    tool_data: List[Dict[str, Any]],
+    filter_guide: str,
+) -> Dict[str, Any]:
+    """Run an LLM-powered search over Notion content.
+
+    Parameters
+    ----------
+    query : str
+        The natural-language query provided by the caller.
+    notion : AsyncClient
+        An already-configured Notion client instance.
+    tool_data : List[Dict[str, Any]]
+        Cached metadata describing pages and databases (as produced by
+        ``build_tool_metadata`` and persisted via ``generate_tool_metadata_json``).
+    filter_guide : str
+        Prompt text that guides the LLM when building database filter objects.
+
+    Returns
+    -------
+    Dict[str, Any]
+        A mapping with two keys:
+        * ``"pages"`` – mapping of page_id → list[block] (full block objects).
+        * ``"databases"`` – mapping of database_id → query results returned by
+          the Notion API for that DB (after applying an LLM-generated filter).
+    """
+    logger.info("Running search agent for query: %s", query)
+
+    # Ask the LLM which pages and databases are relevant.
+    agent_out = await run_search_agent(query, tool_data)
+
+    # Results will contain already-simplified text/values rather than the raw
+    # Notion API payloads so that callers can work with them directly.
+    pages: Dict[str, str] = {}
+    databases: Dict[str, List[Dict[str, Any]]] = {}
+
+    # Fetch full block contents for each relevant page so that the caller
+    # receives the complete context and can decide what to display.
+    for pid in agent_out.page_ids:
+        blocks = await fetch_page_blocks(notion, pid)
+        pages[pid] = _blocks_to_text(blocks)
+
+    # For databases we need an additional step: build a filter so that the
+    # resulting query only returns rows that match the user's intent.
+    for dbid in agent_out.database_ids:
+        # tool_data items store the raw Notion schema JSON (a *string*).
+        raw_schema = next((it.get("schema") for it in tool_data if it["id"] == dbid), None)
+        schema_json: str = raw_schema if isinstance(raw_schema, str) else "{}"
+
+        filter_obj = await build_db_filter(query, schema_json, filter_guide)
+        raw_resp = await notion.databases.query(database_id=dbid, filter=filter_obj["filter"])
+        databases[dbid] = _simplify_database_query(raw_resp)
+
+    return {"pages": pages, "databases": databases}
