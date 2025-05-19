@@ -5,4 +5,5 @@ __pycache__/
 .ebextensions/
 .DS_Store
 Voice2NotionServer/notion_tools_data.json
+Voice2NotionServer/db_custom_instructions.json
 Voice2NotionServer/scripts/lambda_daily_tool_update.zip
