@@ -343,7 +343,8 @@ async def run_search_agent(query: str, tool_data: List[Dict[str, Any]]) -> Searc
     ])
 
     llm = ChatOpenAI(temperature=0, model="gpt-4o").with_structured_output(SearchAgentOutput)
-    return await llm.ainvoke(prompt.format_messages(query=query))
+    from typing import cast
+    return cast(SearchAgentOutput, await llm.ainvoke(prompt.format_messages(query=query)))
 
 
 async def build_db_filter(query: str, schema_json: str, guide_text: str) -> Dict[str, Any]:
@@ -407,6 +408,78 @@ def build_tools_from_data(data: List[Dict[str, Any]]) -> List[StructuredTool]:
             )
     return tools
 
+# === Helper functions for plain-text extraction =====================================
+def _rich_text_to_str(rich_list: List[dict]) -> str:
+    """Return concatenated plain_text from a Notion rich_text list."""
+    return "".join(rt.get("plain_text", "") for rt in rich_list or [])
+
+
+def _extract_property_value(prop: dict) -> Any:
+    """Return a simplified Python value for a Notion property object.
+
+    The goal is to surface the human-readable text or primitive scalar so that
+    downstream callers don't need to understand the full Notion API schema.
+    """
+    if not isinstance(prop, dict):
+        return prop  # Fallback – unexpected shape.
+
+    typ = prop.get("type")
+
+    match typ:
+        case "title":
+            return _rich_text_to_str(prop.get("title", []))
+        case "rich_text":
+            return _rich_text_to_str(prop.get("rich_text", []))
+        case "number":
+            return prop.get("number")
+        case "checkbox":
+            return prop.get("checkbox")
+        case "select":
+            sel = prop.get("select")
+            return sel.get("name") if sel else None
+        case "multi_select":
+            return [opt.get("name") for opt in prop.get("multi_select", [])]
+        case "date":
+            return prop.get("date")  # Caller can decide which field(s) to use.
+        case "status":
+            status = prop.get("status")
+            return status.get("name") if status else None
+        case _:
+            # For unsupported/unknown types, return the raw object so that
+            # information isn't lost (callers can inspect if needed).
+            return prop.get(typ)
+
+
+def _blocks_to_text(blocks: List[dict]) -> str:
+    """Concatenate all rich_text from a list of block objects."""
+    parts: List[str] = []
+    for blk in blocks:
+        blk_type = blk.get("type")
+        if not blk_type:
+            continue
+        rich = blk.get(blk_type, {}).get("rich_text", [])
+        if rich:
+            parts.append(_rich_text_to_str(rich))
+    return "\n".join(parts)
+
+
+def _simplify_database_query(resp: dict) -> List[Dict[str, Any]]:
+    """Convert the Notion database query API response into a lightweight form.
+
+    Each row is reduced to::
+
+        {
+            "id": <page_id>,
+            "properties": {<prop_name>: <simplified value>, ...}
+        }
+    """
+    simplified: List[Dict[str, Any]] = []
+    for page in resp.get("results", []):
+        props = page.get("properties", {})
+        simplified_props = {name: _extract_property_value(pval) for name, pval in props.items()}
+        simplified.append({"id": page.get("id"), "properties": simplified_props})
+    return simplified
+
 # === High-level search helper =================================================
 # This function centralises the logic originally implemented inside the FastAPI
 # endpoint in main.py so that it can be reused in other contexts (e.g. unit
@@ -445,13 +518,16 @@ async def search_notion_data(
     # Ask the LLM which pages and databases are relevant.
     agent_out = await run_search_agent(query, tool_data)
 
-    pages: Dict[str, Any] = {}
-    databases: Dict[str, Any] = {}
+    # Results will contain already-simplified text/values rather than the raw
+    # Notion API payloads so that callers can work with them directly.
+    pages: Dict[str, str] = {}
+    databases: Dict[str, List[Dict[str, Any]]] = {}
 
     # Fetch full block contents for each relevant page so that the caller
     # receives the complete context and can decide what to display.
     for pid in agent_out.page_ids:
-        pages[pid] = await fetch_page_blocks(notion, pid)
+        blocks = await fetch_page_blocks(notion, pid)
+        pages[pid] = _blocks_to_text(blocks)
 
     # For databases we need an additional step: build a filter so that the
     # resulting query only returns rows that match the user's intent.
@@ -461,6 +537,7 @@ async def search_notion_data(
         schema_json: str = raw_schema if isinstance(raw_schema, str) else "{}"
 
         filter_obj = await build_db_filter(query, schema_json, filter_guide)
-        databases[dbid] = await notion.databases.query(database_id=dbid, filter=filter_obj["filter"])
+        raw_resp = await notion.databases.query(database_id=dbid, filter=filter_obj["filter"])
+        databases[dbid] = _simplify_database_query(raw_resp)
 
     return {"pages": pages, "databases": databases}
