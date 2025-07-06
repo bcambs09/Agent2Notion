@@ -3,8 +3,8 @@
 set -euo pipefail
 
 FUNC_NAME=lambda_daily_tool_update.py            # path to the handler
-REQ_FILE=Voice2NotionServer/requirements.txt     # your requirements.txt
-OUT_ZIP=Voice2NotionServer/scripts/lambda_daily_tool_update.zip
+REQ_FILE=Agent2NotionServer/requirements.txt     # your requirements.txt
+OUT_ZIP=Agent2NotionServer/scripts/lambda_daily_tool_update.zip
 
 PY_VERSION=3.11                                  # Lambda runtime
 BUILD_DIR=$(mktemp -d)
@@ -18,10 +18,10 @@ pip3 install \
   -t "${BUILD_DIR}"
 
 echo "· Copying function code"
-cp Voice2NotionServer/scripts/${FUNC_NAME} "${BUILD_DIR}/"
+cp Agent2NotionServer/scripts/${FUNC_NAME} "${BUILD_DIR}/"
 
 # include any local packages that the function imports (e.g. notion_tools)
-cp -r Voice2NotionServer/notion_tools.py "${BUILD_DIR}/"
+cp -r Agent2NotionServer/notion_tools.py "${BUILD_DIR}/"
 mkdir -p "${BUILD_DIR}/scripts"
 
 echo "· Zipping"

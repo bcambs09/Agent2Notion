@@ -1,0 +1,16 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+Consult README.md for a high level project overview.
+
+Consult notion_api.yml for help in writing functions that need to connect to the Notion API (note: this file is large).
+
+Adhere to existing code patterns and usages, and write clean and efficient code.
+
+If you generate code as part of a step that ends up becoming unused, please remove it.
+
+For Python logging, use logger.info instead of print.
+
+Stay focused on your current task -- do not modify parts of the codebase that are not relevant to your task.

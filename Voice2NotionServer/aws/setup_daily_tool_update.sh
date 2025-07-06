@@ -5,12 +5,12 @@
 set -euo pipefail
 
 AWS_REGION="us-east-1"
-CODE_KEY="lambda/voice2notion-daily-tool-update.zip"
+CODE_KEY="lambda/agent2notion-daily-tool-update.zip"
 
 source .env
 
 # Upload packaged lambda code
-aws s3 cp Voice2NotionServer/scripts/lambda_daily_tool_update.zip s3://${SCHEMA_REFRESH_CODE_BUCKET}/${CODE_KEY} --region ${AWS_REGION}
+aws s3 cp Agent2NotionServer/scripts/lambda_daily_tool_update.zip s3://${SCHEMA_REFRESH_CODE_BUCKET}/${CODE_KEY} --region ${AWS_REGION}
 
 # Create the Lambda function
 aws lambda create-function \

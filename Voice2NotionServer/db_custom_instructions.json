@@ -1,0 +1,3 @@
+{
+    "bd3fcf79-c7ae-4d46-88bd-22d78b5d7b77": "References to \"Today\" could refer to either the current date, or the priority level Today, which is the highest priority level.\nAny references to completed or finished tasks should be interpreted as the Done status. An unfinished task is defined as one in the In progress or Not Started statuses."
+}

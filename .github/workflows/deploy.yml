@@ -25,7 +25,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r Voice2NotionServer/requirements.txt
+        pip install -r Agent2NotionServer/requirements.txt
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
@@ -36,7 +36,7 @@ jobs:
 
     - name: Generate deployment package
       run: |
-        cd Voice2NotionServer
+        cd Agent2NotionServer
         zip -r ../deployment.zip . -x "*.git*" "*.env*" "__pycache__/*"
 
     - name: Deploy to Elastic Beanstalk

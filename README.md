@@ -1,6 +1,6 @@
-# Voice2Notion
+# Agent2Notion
 
-A voice-first AI agent that turns natural language (spoken or typed) into structured Notion content.
+An agentic system that turns natural language (spoken or typed) into structured Notion content.
 The backend is a FastAPI server powered by a LangGraph workflow that can reason over your request and
 call dynamically-generated tools that map directly to your personal Notion workspace.
 
@@ -31,10 +31,8 @@ Client ─▶ /add-to-notion  ─┐
    * `notion_chat` – a GPT-4o reasoning step bound to the available tools.
    * `tools` – executes whichever tool the model selects.
 3. **Tool catalogue**
-   * **Static tools**: `create_new_task`, `add_to_movie_list`.
-   * **Dynamic tools**: At start-up `notion_tools.py` scans every database & page your Notion token
-     can access, creates a `StructuredTool` for each, and stores a lightweight description in
-     `notion_tools_data.json` for fast reloads.
+   * **Dynamic tools**: `notion_tools.py` runs as a daily cron job, scanning every database & page your Notion token
+     can access. The cron job creates a `StructuredTool` for each with a relevant description.
 4. The graph loops ⟲ between `notion_chat` and `tools` until the model signals `END`, then the server
    returns the final state to the caller.
 
@@ -51,7 +49,7 @@ Client ─▶ /add-to-notion  ─┐
 ```bash
 # 1. Get the code
 $ git clone <repo>
-$ cd Voice2Notion/Voice2NotionServer
+$ cd Agent2Notion/Agent2NotionServer
 
 # 2. Create and activate virtual-env
 $ python -m venv venv
@@ -97,30 +95,30 @@ metadata daily:
 
 1. Package the Lambda code
    ```bash
-   $  ./Voice2NotionServer/scripts/build_lambda_daily_tool_update.sh 
+   $  ./Agent2NotionServer/scripts/build_lambda_daily_tool_update.sh 
    ```
 
-2. Run `./Voice2NotionServer/aws/setup_daily_tool_update.sh` to create the Lambda. Copy the LAMBDA_ARN.
+2. Run `./Agent2NotionServer/aws/setup_daily_tool_update.sh` to create the Lambda. Copy the LAMBDA_ARN.
    
 2. Copy to S3
    ```bash
-   $ aws s3 cp Voice2NotionServer/scripts/lambda_daily_tool_update.zip \
-         s3://${SCHEMA_REFRESH_CODE_BUCKET}/lambda/voice2notion-daily-tool-update.zip \
+   $ aws s3 cp Agent2NotionServer/scripts/lambda_daily_tool_update.zip \
+         s3://${SCHEMA_REFRESH_CODE_BUCKET}/lambda/agent2notion-daily-tool-update.zip \
          --region us-east-1
    ```
 3. Update function code
    ```base
    $ aws lambda update-function-code \
-     --function-name voice2notion-daily-tool-update \
+     --function-name agent2notion-daily-tool-update \
      --s3-bucket ${SCHEMA_REFRESH_CODE_BUCKET} \
-     --s3-key lambda/voice2notion-daily-tool-update.zip \
+     --s3-key lambda/agent2notion-daily-tool-update.zip \
      --region us-east-1
 
 The Lambda regenerates `notion_tools_data.json`, uploads it to the S3 bucket
 specified by `NOTION_TOOL_DATA_BUCKET` and restarts the environment defined in
 `EB_ENVIRONMENT_NAME`.
 
-### Run the server
+### Run the server locally
 ```bash
 $ uvicorn main:app --reload  # http://localhost:8000
 ```

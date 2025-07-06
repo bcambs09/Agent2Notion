@@ -10,7 +10,7 @@ import boto3
 # Configure basic logging
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(name)s: %(message)s')
 
-# Add the parent directory (Voice2NotionServer) to sys.path
+# Add the parent directory (Agent2NotionServer) to sys.path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from notion_tools import generate_and_cache_tool_metadata

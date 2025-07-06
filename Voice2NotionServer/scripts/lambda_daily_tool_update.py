@@ -6,7 +6,7 @@ from pathlib import Path
 
 import boto3
 
-# Add Voice2NotionServer to sys.path for local imports when packaged
+# Add Agent2NotionServer to sys.path for local imports when packaged
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 

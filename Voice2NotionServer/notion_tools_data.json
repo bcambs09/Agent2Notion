@@ -1,0 +1,240 @@
+[
+  {
+    "id": "bd3fcf79-c7ae-4d46-88bd-22d78b5d7b77",
+    "type": "database",
+    "title": "Tasks",
+    "summary": "The \"Tasks\" database in Notion contains entries for various tasks or to-dos. Each task has attributes such as blocking relationships, priority level, parent item, size, creation time, blocked by relationships, journal entries, sub-items, status, completion time, due date, tags, and name/title. Examples of entries include tasks related to a personal website, Brendan's next to-dos, and reading a document by Hayden.",
+    "schema": "{\"Blocking\": {\"id\": \"%3AWcR\", \"name\": \"Blocking\", \"type\": \"relation\", \"relation\": {\"database_id\": \"bd3fcf79-c7ae-4d46-88bd-22d78b5d7b77\", \"type\": \"dual_property\", \"dual_property\": {\"synced_property_name\": \"Blocked by\", \"synced_property_id\": \"bumo\"}}}, \"Priority\": {\"id\": \"%3E%7CX%5D\", \"name\": \"Priority\", \"type\": \"select\", \"select\": {\"options\": [{\"id\": \"d2ab6f8c-15ab-4c12-80b2-4f857eb96cad\", \"name\": \"Today\", \"color\": \"pink\", \"description\": null}, {\"id\": \"5ff48a98-ac90-4e9a-8d04-7cccaf806063\", \"name\": \"ASAP\", \"color\": \"purple\", \"description\": null}, {\"id\": \"YrEh\", \"name\": \"High\", \"color\": \"blue\", \"description\": null}, {\"id\": \"e~{Q\", \"name\": \"Medium\", \"color\": \"yellow\", \"description\": null}, {\"id\": \"79701938-7c32-4108-a51d-92491ca3013a\", \"name\": \"Low\", \"color\": \"green\", \"description\": null}, {\"id\": \"72cc236d-3f2a-4241-8e5b-f34362acd04a\", \"name\": \"People\", \"color\": \"gray\", \"description\": null}]}}, \"Parent item\": {\"id\": \"LXCI\", \"name\": \"Parent item\", \"type\": \"relation\", \"relation\": {\"database_id\": \"bd3fcf79-c7ae-4d46-88bd-22d78b5d7b77\", \"type\": \"dual_property\", \"dual_property\": {\"synced_property_name\": \"Sub-item\", \"synced_property_id\": \"pUhd\"}}}, \"Size\": {\"id\": \"VO_E\", \"name\": \"Size\", \"type\": \"number\", \"number\": {\"format\": \"number\"}}, \"Created time\": {\"id\": \"biJ%60\", \"name\": \"Created time\", \"type\": \"created_time\", \"created_time\": {}}, \"Blocked by\": {\"id\": \"bumo\", \"name\": \"Blocked by\", \"type\": \"relation\", \"relation\": {\"database_id\": \"bd3fcf79-c7ae-4d46-88bd-22d78b5d7b77\", \"type\": \"dual_property\", \"dual_property\": {\"synced_property_name\": \"Blocking\", \"synced_property_id\": \"%3AWcR\"}}}, \"\\ud83d\\udcd3 Journal\": {\"id\": \"jd%7Cm\", \"name\": \"\\ud83d\\udcd3 Journal\", \"type\": \"relation\", \"relation\": {\"database_id\": \"c3ba03f7-8bda-4e42-800a-702de2162905\", \"type\": \"dual_property\", \"dual_property\": {\"synced_property_name\": \"\\ud83e\\uddd9\\ud83c\\udffb\\u200d\\u2642\\ufe0f Tasks\", \"synced_property_id\": \"E%3DD~\"}}}, \"Sub-item\": {\"id\": \"pUhd\", \"name\": \"Sub-item\", \"type\": \"relation\", \"relation\": {\"database_id\": \"bd3fcf79-c7ae-4d46-88bd-22d78b5d7b77\", \"type\": \"dual_property\", \"dual_property\": {\"synced_property_name\": \"Parent item\", \"synced_property_id\": \"LXCI\"}}}, \"Status\": {\"id\": \"r%3C%3CP\", \"name\": \"Status\", \"type\": \"status\", \"status\": {\"options\": [{\"id\": \"Ud{k\", \"name\": \"People\", \"color\": \"gray\", \"description\": null}, {\"id\": \"l`Uu\", \"name\": \"Ongoing\", \"color\": \"pink\", \"description\": null}, {\"id\": \"sP_G\", \"name\": \"Duplicate\", \"color\": \"purple\", \"description\": null}, {\"id\": \"B{l<\", \"name\": \"Deprioritized\", \"color\": \"yellow\", \"description\": null}, {\"id\": \"XXsg\", \"name\": \"Blocked\", \"color\": \"orange\", \"description\": null}, {\"id\": \"abc26a4f-a41b-44aa-88f1-00817414c3b4\", \"name\": \"Not started\", \"color\": \"default\", \"description\": null}, {\"id\": \"04b0a00a-daf6-4f53-bde8-83ee9a9d7830\", \"name\": \"In progress\", \"color\": \"blue\", \"description\": null}, {\"id\": \"42ad2023-3c7c-4d55-b9d2-c6f35145c805\", \"name\": \"Done\", \"color\": \"green\", \"description\": null}], \"groups\": [{\"id\": \"3c54d851-c5d6-4afe-b5e0-a1389ece0c41\", \"name\": \"To-do\", \"color\": \"gray\", \"option_ids\": [\"abc26a4f-a41b-44aa-88f1-00817414c3b4\"]}, {\"id\": \"6f5d9fdb-2d33-4e5a-8e07-dfc8faa847b8\", \"name\": \"In progress\", \"color\": \"blue\", \"option_ids\": [\"Ud{k\", \"l`Uu\", \"XXsg\", \"04b0a00a-daf6-4f53-bde8-83ee9a9d7830\"]}, {\"id\": \"9a13937c-cea0-429e-a636-9d2a1cf90ef2\", \"name\": \"Complete\", \"color\": \"green\", \"option_ids\": [\"sP_G\", \"B{l<\", \"42ad2023-3c7c-4d55-b9d2-c6f35145c805\"]}]}}, \"Completed time\": {\"id\": \"slR%3B\", \"name\": \"Completed time\", \"type\": \"date\", \"date\": {}}, \"Due date\": {\"id\": \"x%3FLP\", \"name\": \"Due date\", \"type\": \"date\", \"date\": {}}, \"Tags\": {\"id\": \"%7CnWi\", \"name\": \"Tags\", \"type\": \"multi_select\", \"multi_select\": {\"options\": [{\"id\": \"325e408f-f302-4fb3-a4d4-6e0d87a19e46\", \"name\": \"Personal\", \"color\": \"red\", \"description\": null}, {\"id\": \"50c83826-a8fb-4740-9be6-0c0526604d92\", \"name\": \"Puerto Rico\", \"color\": \"red\", \"description\": null}, {\"id\": \"77be3cdd-2ce6-4d87-af92-c88206d493db\", \"name\": \"Finance\", \"color\": \"red\", \"description\": null}, {\"id\": \"13d39699-fd3d-413b-9133-1eb8073d9a83\", \"name\": \"Fitness\", \"color\": \"red\", \"description\": null}, {\"id\": \"370ff1bf-cbdf-42e0-9a09-d5c114cb94e8\", \"name\": \"BOLD\", \"color\": \"yellow\", \"description\": null}, {\"id\": \"93c35d1d-4d67-45fe-bd0e-3e5b23c1e543\", \"name\": \"Admin\", \"color\": \"purple\", \"description\": null}, {\"id\": \"e38dd5da-6f27-4ea9-ac95-653a6126989b\", \"name\": \"IC work\", \"color\": \"purple\", \"description\": null}, {\"id\": \"28e4a74f-9d8b-45ce-b103-7788d5a98367\", \"name\": \"Documentation\", \"color\": \"purple\", \"description\": null}, {\"id\": \"dc3356db-1091-4b96-b985-fa82e132718f\", \"name\": \"Planning / Brainstorming\", \"color\": \"purple\", \"description\": null}, {\"id\": \"16cef6a6-ffaa-4428-8c90-0d0ee7583ac2\", \"name\": \"Onboarding\", \"color\": \"purple\", \"description\": null}, {\"id\": \"8386f5b4-6330-4d64-b963-d2e338fa229e\", \"name\": \"Reviewing\", \"color\": \"purple\", \"description\": null}, {\"id\": \"6fa5d2c7-ded7-4025-87f5-850b69c069df\", \"name\": \"Recruiting\", \"color\": \"purple\", \"description\": null}, {\"id\": \"eefd839b-d258-4457-acd1-e2e185c3919f\", \"name\": \"Education\", \"color\": \"green\", \"description\": null}, {\"id\": \"78f18d00-8d45-462d-964c-33d388eefcff\", \"name\": \"Research\", \"color\": \"green\", \"description\": null}, {\"id\": \"fd1ea0b4-1429-46c1-84d5-78f37b772b1a\", \"name\": \"Career growth\", \"color\": \"green\", \"description\": null}, {\"id\": \"df71b894-4fc1-49a9-952a-91aa6274e230\", \"name\": \"Networking\", \"color\": \"gray\", \"description\": null}, {\"id\": \"a662b7ad-76e4-4b57-ab13-0a5a3ace4d88\", \"name\": \"People\", \"color\": \"gray\", \"description\": null}, {\"id\": \"2aedb437-b3d8-4178-a43e-3e953330e0f9\", \"name\": \"Test\", \"color\": \"brown\", \"description\": null}, {\"id\": \"4b76606b-2b74-485d-8cb0-0da3c128f0a1\", \"name\": \"Meeting\", \"color\": \"orange\", \"description\": null}, {\"id\": \"e3a2270a-5a7a-484f-aabb-fed9d130a5e4\", \"name\": \"Email\", \"color\": \"blue\", \"description\": null}, {\"id\": \"fde3f2e6-ce51-4445-9301-a3b0f1122929\", \"name\": \"Lessons\", \"color\": \"default\", \"description\": null}, {\"id\": \"c0bf99b2-d804-48ff-8fe1-04d17e6edb49\", \"name\": \"Reminder\", \"color\": \"pink\", \"description\": null}, {\"id\": \"ea2f3d3d-cf72-4f30-b775-cfcb61513519\", \"name\": \"Software Development\", \"color\": \"yellow\", \"description\": null}, {\"id\": \"349dd199-8eb1-4cd8-b4cd-26e15f756f58\", \"name\": \"Focus\", \"color\": \"yellow\", \"description\": null}, {\"id\": \"9a0a7f50-73a6-457b-a0fe-d8175e0a0e2e\", \"name\": \"Self-improvement\", \"color\": \"default\", \"description\": null}, {\"id\": \"698fa19d-b338-448f-8f91-ab280a15b94e\", \"name\": \"Productivity\", \"color\": \"purple\", \"description\": null}, {\"id\": \"a43b2ab2-3547-482e-9ef7-242b09b68882\", \"name\": \"Language Learning\", \"color\": \"gray\", \"description\": null}, {\"id\": \"2eebc3fb-5584-4e7d-9505-53d50e2aa397\", \"name\": \"Social Media\", \"color\": \"green\", \"description\": null}, {\"id\": \"e06d393c-898f-4dbb-8155-94a8cb6e3fae\", \"name\": \"Travel\", \"color\": \"default\", \"description\": null}, {\"id\": \"ba4251b5-a788-489c-9ba5-2ea10749b52a\", \"name\": \"Python\", \"color\": \"gray\", \"description\": null}, {\"id\": \"cc355477-3667-4e8a-acf0-912b400d0e2a\", \"name\": \"Testing\", \"color\": \"gray\", \"description\": null}, {\"id\": \"bd1455fe-cccb-4ec8-9c0c-5f68de3c08ee\", \"name\": \"Network Hops\", \"color\": \"default\", \"description\": null}, {\"id\": \"9d5138cc-9d6b-4a37-a922-3659bcb77fba\", \"name\": \"Test Case\", \"color\": \"gray\", \"description\": null}, {\"id\": \"1785696a-cd0c-4413-b90c-4efa3be5effb\", \"name\": \"Circular Connections\", \"color\": \"gray\", \"description\": null}]}}, \"Name\": {\"id\": \"title\", \"name\": \"Name\", \"type\": \"title\", \"title\": {}}}"
+  },
+  {
+    "id": "1f17c8a5-ed21-80af-834c-cb10f9d592fe",
+    "type": "database",
+    "title": "Tweets",
+    "summary": "The database named \"Tweets\" contains entries with the following fields: Status (select) and Name (title). Some example entries include \"Vibe coding - near disaster with uploading personal Notion data to git,\" \"New Amazon chat AI demo / reaction,\" and \"Codex-1 thread.\"",
+    "schema": "{\"Status\": {\"id\": \"~CJL\", \"name\": \"Status\", \"type\": \"select\", \"select\": {\"options\": [{\"id\": \"43f887a6-6a1b-47c8-a81a-e6a3023f0e1e\", \"name\": \"Idea\", \"color\": \"gray\", \"description\": null}, {\"id\": \"31484b6f-df3f-4622-82d7-1dbc21fac85c\", \"name\": \"Drafting\", \"color\": \"blue\", \"description\": null}, {\"id\": \"ccCy\", \"name\": \"Ready to post\", \"color\": \"brown\", \"description\": null}, {\"id\": \"6c813cae-5d32-4c28-9c1c-56b3a99e273b\", \"name\": \"Posted\", \"color\": \"green\", \"description\": null}]}}, \"Name\": {\"id\": \"title\", \"name\": \"Name\", \"type\": \"title\", \"title\": {}}}"
+  },
+  {
+    "id": "1f27c8a5-ed21-8099-b9e1-ccea3005a234",
+    "type": "database",
+    "title": "Project ideas",
+    "summary": "The Notion database is named \"Project ideas\" and includes entries with the following schema: Project Status (select) and Name (title). Some example entries in the database are: \"Build personal website,\" \"Finish Notion agent,\" and \"Fine tune Sesame on my voice.\"",
+    "schema": "{\"Project Status\": {\"id\": \"UrNG\", \"name\": \"Project Status\", \"type\": \"select\", \"select\": {\"options\": [{\"id\": \"=_Ot\", \"name\": \"Completed\", \"color\": \"green\", \"description\": null}, {\"id\": \"N]G]\", \"name\": \"In progress\", \"color\": \"yellow\", \"description\": null}, {\"id\": \"dz~f\", \"name\": \"Not started\", \"color\": \"default\", \"description\": null}]}}, \"Name\": {\"id\": \"title\", \"name\": \"Name\", \"type\": \"title\", \"title\": {}}}"
+  },
+  {
+    "id": "65108c95-fd90-4560-a5a3-9516bea586c7",
+    "type": "database",
+    "title": "Quote board",
+    "summary": "The \"Quote board\" Notion database contains quotes with the following fields: Author (rich_text), Formula (formula), Display? (formula), and Quote (title). The database includes entries with quotes from various authors, such as \"I have dreams, and I can\u2019t get there drunk\" and \"Accept the past, focus on the present, shape the future.\"",
+    "schema": "{\"Author\": {\"id\": \"ZOE~\", \"name\": \"Author\", \"type\": \"rich_text\", \"rich_text\": {}}, \"Formula\": {\"id\": \"%5D%3A%3Du\", \"name\": \"Formula\", \"type\": \"formula\", \"formula\": {\"expression\": \"mod(toNumber(substring(replaceAll(id(), \\\"[a-f]\\\", \\\"\\\"), 0, 4)) * mod(timestamp(now())/10000, 123456), 123456)\"}}, \"Display?\": {\"id\": \"%5E%5EQj\", \"name\": \"Display?\", \"type\": \"formula\", \"formula\": {\"expression\": \"format({{notion:block_property:St%3Fh:00000000-0000-0000-0000-000000000000:c3b3cce7-279c-4aaf-bc86-7954e47c8acb}})==format({{notion:block_property:%5D%3A%3Du:00000000-0000-0000-0000-000000000000:c3b3cce7-279c-4aaf-bc86-7954e47c8acb}})\"}}, \"Quote\": {\"id\": \"title\", \"name\": \"Quote\", \"type\": \"title\", \"title\": {}}}"
+  },
+  {
+    "id": "985935ab-556f-40b8-8164-dcd153229635",
+    "type": "database",
+    "title": "Goals",
+    "summary": "The \"Goals\" database contains entries related to various goals individuals may have. Each entry includes the category of the goal, the date associated with it, a selection option, and the name/title of the goal. Examples of entries include \"Learn Spanish,\" \"Therapy,\" and \"Journal at the end of everyday.\"",
+    "schema": "{\"Category\": {\"id\": \"JV%5Ce\", \"name\": \"Category\", \"type\": \"multi_select\", \"multi_select\": {\"options\": [{\"id\": \"92b74f3a-60eb-4f7b-8371-a3543424ac18\", \"name\": \"Fitness\", \"color\": \"blue\", \"description\": null}, {\"id\": \"ccae03c7-b9c7-44b8-bb9a-b6382f374f09\", \"name\": \"Habits\", \"color\": \"brown\", \"description\": null}, {\"id\": \"85484e5f-3189-4554-9a31-75949b3bcd36\", \"name\": \"Sonara\", \"color\": \"purple\", \"description\": null}, {\"id\": \"3b41d00e-a51b-4766-97da-3d2201310e07\", \"name\": \"Mental Health\", \"color\": \"green\", \"description\": null}]}}, \"Date\": {\"id\": \"%5DsiE\", \"name\": \"Date\", \"type\": \"multi_select\", \"multi_select\": {\"options\": [{\"id\": \"84b720ba-c16e-41bf-90d0-dba012919a0b\", \"name\": \"Q1 2024\", \"color\": \"gray\", \"description\": null}, {\"id\": \"4c50f274-28c2-449d-bf4a-5d7469879eb9\", \"name\": \"Q2 2024\", \"color\": \"orange\", \"description\": null}, {\"id\": \"22547740-0596-4d8f-8f61-4523ce866fee\", \"name\": \"Q1 2025\", \"color\": \"blue\", \"description\": null}, {\"id\": \"96f7dd5b-8fb1-448d-b3af-79f622f5cf58\", \"name\": \"Q2 2025\", \"color\": \"yellow\", \"description\": null}]}}, \"Select\": {\"id\": \"pDiV\", \"name\": \"Select\", \"type\": \"select\", \"select\": {\"options\": [{\"id\": \"413b18f8-2deb-4afb-b9f8-d03ab4ac7234\", \"name\": \"Missed\", \"color\": \"red\", \"description\": null}, {\"id\": \"1af91b8f-1f4e-42a8-a039-f743953073ae\", \"name\": \"At risk\", \"color\": \"orange\", \"description\": null}, {\"id\": \"425b90c2-794d-4a62-91a5-6796ce105448\", \"name\": \"On track\", \"color\": \"blue\", \"description\": null}, {\"id\": \"9fe98d86-c6ea-45cf-9605-c8cbd4bb00e6\", \"name\": \"Complete\", \"color\": \"green\", \"description\": null}]}}, \"Name\": {\"id\": \"title\", \"name\": \"Name\", \"type\": \"title\", \"title\": {}}}"
+  },
+  {
+    "id": "c3ba03f7-8bda-4e42-800a-702de2162905",
+    "type": "database",
+    "title": "Journal",
+    "summary": "The Notion database is named \"Journal\" and includes various fields such as Velocity, Drinks, Tasks, PT, Lift, Rest day, Date, Focus, Run, Mood, and Name. The database contains daily entries with information related to these fields.",
+    "schema": "{\"Velocity\": {\"id\": \"%3A%7DBm\", \"name\": \"Velocity\", \"type\": \"rollup\", \"rollup\": {\"rollup_property_name\": \"Size\", \"relation_property_name\": \"\\ud83e\\uddd9\\ud83c\\udffb\\u200d\\u2642\\ufe0f Tasks\", \"rollup_property_id\": \"VO_E\", \"relation_property_id\": \"E=D~\", \"function\": \"sum\"}}, \"Drinks\": {\"id\": \"%3E%7D%5C%5B\", \"name\": \"Drinks\", \"type\": \"number\", \"number\": {\"format\": \"number\"}}, \"\\ud83e\\uddd9\\ud83c\\udffb\\u200d\\u2642\\ufe0f Tasks\": {\"id\": \"E%3DD~\", \"name\": \"\\ud83e\\uddd9\\ud83c\\udffb\\u200d\\u2642\\ufe0f Tasks\", \"type\": \"relation\", \"relation\": {\"database_id\": \"bd3fcf79-c7ae-4d46-88bd-22d78b5d7b77\", \"type\": \"dual_property\", \"dual_property\": {\"synced_property_name\": \"\\ud83d\\udcd3 Journal\", \"synced_property_id\": \"jd%7Cm\"}}}, \"PT\": {\"id\": \"Qrsz\", \"name\": \"PT\", \"type\": \"checkbox\", \"checkbox\": {}}, \"Lift\": {\"id\": \"TLlx\", \"name\": \"Lift\", \"type\": \"checkbox\", \"checkbox\": {}}, \"Rest day\": {\"id\": \"%5ETMi\", \"name\": \"Rest day\", \"type\": \"checkbox\", \"checkbox\": {}}, \"Date\": {\"id\": \"_sPp\", \"name\": \"Date\", \"type\": \"date\", \"date\": {}}, \"Focus\": {\"id\": \"jg%3Aj\", \"name\": \"Focus\", \"type\": \"number\", \"number\": {\"format\": \"number\"}}, \"Run\": {\"id\": \"pdgy\", \"name\": \"Run\", \"type\": \"checkbox\", \"checkbox\": {}}, \"Mood\": {\"id\": \"qhoS\", \"name\": \"Mood\", \"type\": \"number\", \"number\": {\"format\": \"number\"}}, \"Name\": {\"id\": \"title\", \"name\": \"Name\", \"type\": \"title\", \"title\": {}}}"
+  },
+  {
+    "id": "76d114a0-f94c-434e-9762-f7b10c266dff",
+    "type": "database",
+    "title": "Recipes",
+    "summary": "The \"Recipes\" database contains entries for various recipes. Each entry includes a link to the recipe, tags for categorization, and the name of the recipe. Examples of entries include \"Masters Pimento Cheese Sandwiches,\" \"Creamy Lemon Parm Chicken and Rice,\" and \"Queso Chicken and Rice.\"",
+    "schema": "{\"Link\": {\"id\": \"xe1%3F\", \"name\": \"Link\", \"type\": \"url\", \"url\": {}}, \"Tags\": {\"id\": \"ymgk\", \"name\": \"Tags\", \"type\": \"multi_select\", \"multi_select\": {\"options\": [{\"id\": \"e3a41d0c-2918-4bda-855f-065369d0b4ef\", \"name\": \"Dessert\", \"color\": \"purple\", \"description\": null}, {\"id\": \"5ab76036-6042-40e2-ad35-7b24206b311f\", \"name\": \"Dinner\", \"color\": \"orange\", \"description\": null}, {\"id\": \"e84a3694-11fd-4fc0-b4d3-0a98865d7456\", \"name\": \"Easy\", \"color\": \"yellow\", \"description\": null}, {\"id\": \"b31edb1a-4a9a-43e2-a2ad-c0b5e83b3ae9\", \"name\": \"Meal Prep\", \"color\": \"pink\", \"description\": null}]}}, \"Name\": {\"id\": \"title\", \"name\": \"Name\", \"type\": \"title\", \"title\": {}}}"
+  },
+  {
+    "id": "d5ee35e0-15cf-4088-806d-13ae7451ae79",
+    "type": "database",
+    "title": "Daily tracking (deprecated)",
+    "summary": "The provided Notion database is named \"Daily tracking (deprecated)\" and includes the following fields: Weed (select), Goals hit (select), Drink count (number), Date (date), Pliability (select), Nicotine (select), Drink count display (formula), and Name (title). The database contains entries for specific dates such as October 2, 2023; October 1, 2023; and September 30, 2023.",
+    "schema": "{\"Weed\": {\"id\": \"I~%7DK\", \"name\": \"Weed\", \"type\": \"select\", \"select\": {\"options\": [{\"id\": \"f98be41e-35ca-4a29-916d-8b0ce3945a5f\", \"name\": \"Used marijuana\", \"color\": \"red\", \"description\": null}, {\"id\": \"f090bcf6-9041-4462-8c8f-3eb96eff3067\", \"name\": \"Did not use marijuana\", \"color\": \"green\", \"description\": null}]}}, \"Goals hit\": {\"id\": \"WUt%5C\", \"name\": \"Goals hit\", \"type\": \"select\", \"select\": {\"options\": [{\"id\": \"64c5093d-28cd-4965-ac40-414dacc7ffb9\", \"name\": \"Goals hit\", \"color\": \"green\", \"description\": null}, {\"id\": \"849a8d5b-90c6-43c1-a9a7-8e6a09f00fcd\", \"name\": \"Goals not hit\", \"color\": \"red\", \"description\": null}]}}, \"Drink count\": {\"id\": \"c%3AZ%3E\", \"name\": \"Drink count\", \"type\": \"number\", \"number\": {\"format\": \"number\"}}, \"Date\": {\"id\": \"iFxO\", \"name\": \"Date\", \"type\": \"date\", \"date\": {}}, \"Pliability\": {\"id\": \"iScm\", \"name\": \"Pliability\", \"type\": \"select\", \"select\": {\"options\": [{\"id\": \"e8d846c0-7cd7-43f6-a916-ce3e9f07c606\", \"name\": \"Stretched\", \"color\": \"green\", \"description\": null}, {\"id\": \"fd9e5b90-578f-4c1a-9f6a-3072f3e44cdf\", \"name\": \"Did not stretch\", \"color\": \"red\", \"description\": null}]}}, \"Nicotine\": {\"id\": \"xbcP\", \"name\": \"Nicotine\", \"type\": \"select\", \"select\": {\"options\": [{\"id\": \"9b1f2aec-c365-4b1e-b325-27c4bf02dce3\", \"name\": \"Did not use nicotine\", \"color\": \"green\", \"description\": null}, {\"id\": \"6fda7b2d-0d73-473d-a6ce-7324d64d444c\", \"name\": \"Used nicotine\", \"color\": \"red\", \"description\": null}]}}, \"Drink count display\": {\"id\": \"%7B%5B%5B%3A\", \"name\": \"Drink count display\", \"type\": \"formula\", \"formula\": {\"expression\": \"\\\"Drink count: \\\" + format({{notion:block_property:c%3AZ%3E:00000000-0000-0000-0000-000000000000:c3b3cce7-279c-4aaf-bc86-7954e47c8acb}})\"}}, \"Name\": {\"id\": \"title\", \"name\": \"Name\", \"type\": \"title\", \"title\": {}}}"
+  },
+  {
+    "id": "2f30623c-dc25-4397-8a5c-8934756c03e8",
+    "type": "database",
+    "title": "Travel Plans",
+    "summary": "The provided Notion database is named \"Travel Plans\" and contains information about various travel plans. The database includes the following fields for each entry: Places (rich text), People (rich text), Date (date), Status (select), and Name (title). The database likely organizes travel plans by location, people involved, date of the trip, status of the plan, and a title for each entry.",
+    "schema": "{\"Places\": {\"id\": \"6BZi\", \"name\": \"Places\", \"type\": \"rich_text\", \"rich_text\": {}}, \"People\": {\"id\": \"G'5H\", \"name\": \"People\", \"type\": \"rich_text\", \"rich_text\": {}}, \"Date\": {\"id\": \"VXfM\", \"name\": \"Date\", \"type\": \"date\", \"date\": {}}, \"Status\": {\"id\": \"uX%600\", \"name\": \"Status\", \"type\": \"select\", \"select\": {\"options\": [{\"id\": \"276d859a-ff2d-4883-afee-f3247b8c6b45\", \"name\": \"Idea\", \"color\": \"purple\", \"description\": null}, {\"id\": \"866a1a6b-b7d3-427f-989f-410c68177502\", \"name\": \"Planning\", \"color\": \"blue\", \"description\": null}, {\"id\": \"fbe50537-d4b7-4a60-bbc6-927ab51287f3\", \"name\": \"Booked\", \"color\": \"red\", \"description\": null}]}}, \"Name\": {\"id\": \"title\", \"name\": \"Name\", \"type\": \"title\", \"title\": {}}}"
+  },
+  {
+    "id": "4e06d52f-bdd1-4fa6-9ac0-c73c618ed3b6",
+    "type": "database",
+    "title": "Habit log",
+    "summary": "The Notion database is named \"Habit log\" and contains entries for habits with the following schema: Date (date) and Name (title). An example entry in the database is \"Run.\"",
+    "schema": "{\"Date\": {\"id\": \"dssE\", \"name\": \"Date\", \"type\": \"date\", \"date\": {}}, \"Name\": {\"id\": \"title\", \"name\": \"Name\", \"type\": \"title\", \"title\": {}}}"
+  },
+  {
+    "id": "58464285-8d74-49d7-8547-810e661f693b",
+    "type": "page",
+    "title": "Movie List",
+    "summary": "The page lists a variety of movies including \"Godfather II,\" \"The Sandlot,\" \"Lord of the Rings,\" \"Austin Powers,\" \"Straight Outta Compton,\" \"Rocky,\" \"Back to the Future,\" \"Zombieland,\" and many others."
+  },
+  {
+    "id": "1f27c8a5-ed21-8063-bcf3-cdd841558183",
+    "type": "page",
+    "title": "Indie Hacking",
+    "summary": "Indie Hacking is a term used to describe the process of building and growing a business independently, often with limited resources and a focus on bootstrapping. This approach involves leveraging various tools, platforms, and strategies to create and scale a successful business without relying on traditional funding sources or large teams. Indie hackers typically prioritize autonomy, creativity, and efficiency in their entrepreneurial endeavors."
+  },
+  {
+    "id": "f59e37d0-b0b3-4906-b3de-c56e0629c643",
+    "type": "page",
+    "title": "Shopping List",
+    "summary": "The page content is not provided."
+  },
+  {
+    "id": "920d1c01-0af2-4fcc-ae6f-495ae8c38ee5",
+    "type": "page",
+    "title": "Random",
+    "summary": "The page content provides two account numbers: one for water (1372095791) and one for Recology (011349430)."
+  },
+  {
+    "id": "e901b9cb-0484-48f8-81b2-5595b5002e38",
+    "type": "page",
+    "title": "Lists",
+    "summary": "The page likely contains information about lists, including how to create and use lists in various contexts such as programming, organization, and writing. It may cover different types of lists, their benefits, and examples of how to effectively utilize lists."
+  },
+  {
+    "id": "e6814abc-c974-46cf-b394-c5d46703dbc3",
+    "type": "page",
+    "title": "Personal Home",
+    "summary": "The page content appears to be a personal schedule or plan for the individual. It includes notes on health goals related to dopamine, avoiding substances like weed and nicotine, and using Naltrexone. The schedule outlines work hours, Spanish learning time, and other tasks to be completed during the week."
+  },
+  {
+    "id": "1f07c8a5-ed21-80e9-9682-f6e4099e7026",
+    "type": "page",
+    "title": "Twitter Content",
+    "summary": "The page provides tips and strategies for creating content on Twitter. It suggests posting for about a month to identify preferences, creating a persona, defining content pillars, and establishing a style guide. It recommends doing self-interviews, batch writing tweets, and using tools like CreatorBuddy and TweetHunter. Additionally, it outlines a daily framework for Twitter content creation, including different types of tweets to consider."
+  },
+  {
+    "id": "1c362095-738e-4421-b82f-f6aa6ce2e354",
+    "type": "page",
+    "title": "Big purchases",
+    "summary": "The page lists various big purchases, including a new watch, Apple watch series 9, white gold chain, adjustable dumbbells, Scotty Cameron putter, custom-built computer, camera for photography, weighted vest, Montreal Canadiens shirt, clothes from The Normal Brand and Banana Republic, garbage bags, and toilet paper."
+  },
+  {
+    "id": "8b41b1a2-ca8f-4c4e-ba34-344f15f97c62",
+    "type": "page",
+    "title": "Dog names",
+    "summary": "The page lists a few dog names: King, Prince, Rex, Zoe, Rory, and Dorado."
+  },
+  {
+    "id": "1567c8a5-ed21-80c1-bfc7-c7dde52f778f",
+    "type": "page",
+    "title": "Xmas list",
+    "summary": "The page content is a Christmas list that includes items such as a Jack Campbell Lions jersey, a salt pig, a Sonos speaker, Codenames game, a sling bag, a Nintendo Switch controller, and gift cards for Banana Republic and Abercrombie."
+  },
+  {
+    "id": "dda9d9e4-b6fb-4687-b15b-265ee8d7bada",
+    "type": "page",
+    "title": "Friends",
+    "summary": "The page content lists the names of friends who attended a birthday dinner, including Brendan, Conor, Frank, Jake, Sarah C, Sarah T, Lindsey, Celine, Campbell, Jarod, Yoana, Roge, Donato, Avery, and others. The dinner took place in San Francisco and mentions an inner circle consisting of Conor, Jake, and Sarah C."
+  },
+  {
+    "id": "b3de7850-02da-4d88-9f13-018f6ac90113",
+    "type": "page",
+    "title": "Q2 2024",
+    "summary": "The page discusses various activities and goals for the second quarter of 2024, including hobbies, daily routines, and personal goals such as staying binge-free and journaling daily. Other ideas mentioned include fitness, playing the piano, learning Spanish, reading, exploring AI/tech topics, and establishing a morning routine."
+  },
+  {
+    "id": "c1b83382-2789-4bc9-af5f-a198e4025e9b",
+    "type": "page",
+    "title": "2024 Goals",
+    "summary": "The page content is missing."
+  },
+  {
+    "id": "c1b1e467-e63a-48d4-896f-c2fd2705f408",
+    "type": "page",
+    "title": "Q1 2024",
+    "summary": "The page outlines the goals for the first quarter of 2024. The goals include achieving sobriety from alcohol, weed, and nicotine, focusing on mental health by finding a therapist and limiting phone usage, setting fitness goals such as specific weightlifting targets and daily exercise, and planning for Sonara and piano-related goals."
+  },
+  {
+    "id": "f168708b-538a-4bf1-a761-0dc936253a4b",
+    "type": "page",
+    "title": "Movie Rankings",
+    "summary": "The page lists a ranking of movies, including \"Everything Everywhere All at Once,\" \"Good Will Hunting,\" \"Interstellar,\" \"Ferris Bueller\u2019s Day Off,\" \"Inglorious Basterds,\" and \"La La Land.\""
+  },
+  {
+    "id": "2aa09f86-24a8-415f-8a77-6326079d0871",
+    "type": "page",
+    "title": "TV Show List",
+    "summary": "The page lists a variety of TV shows, including \"Succession,\" \"Silicon Valley,\" \"The Last of Us,\" \"Ted Lasso,\" \"Euphoria,\" \"White Lotus,\" \"Rick and Morty\" (new season), \"The Bear,\" and \"Drive to Survive.\""
+  },
+  {
+    "id": "aa89b526-dc9e-4b19-bb85-e3156b9965dd",
+    "type": "page",
+    "title": "Quote board",
+    "summary": "The page content is not provided."
+  },
+  {
+    "id": "d076da9f-ff31-422f-9ea7-c623475a9d81",
+    "type": "page",
+    "title": "Habits (deprecated)",
+    "summary": "This page discusses various habits such as routines, fitness, hobbies, and planning out the next day. It includes a list of habits like flossing, brushing teeth, rinsing with mouthwash, putting the phone on sleep mode, tracking sleep with an app, and following a morning routine."
+  },
+  {
+    "id": "39deb94a-01a4-4662-98a8-540cd4499ba1",
+    "type": "page",
+    "title": "Life planning",
+    "summary": "The page likely discusses the importance of life planning, which involves setting goals and making decisions to achieve a fulfilling and successful life. It may cover topics such as setting priorities, creating a vision for the future, and developing strategies to reach desired outcomes. Life planning can help individuals make informed choices and take proactive steps towards their personal and professional aspirations."
+  },
+  {
+    "id": "f0fb7c85-6046-4830-8538-e51eeae44b9a",
+    "type": "page",
+    "title": "Personal analytics",
+    "summary": "The page likely discusses personal analytics, which involves using data and analysis to gain insights into one's own behavior, habits, and patterns. It may cover how individuals can track and analyze various aspects of their lives, such as health, productivity, and finances, to make informed decisions and improve their overall well-being."
+  },
+  {
+    "id": "488f3a93-6743-447c-849c-f9c93edeed4d",
+    "type": "page",
+    "title": "Business ideas",
+    "summary": "The page discusses various business ideas, including finding a way to compete with TicketMaster, automating web hosting services for a more affordable option, improving email marketing strategies, and converting video documentation into written content."
+  },
+  {
+    "id": "487f8f25-447e-44bb-92b3-d886e9094c4a",
+    "type": "page",
+    "title": "Astra (1)",
+    "summary": "The page discusses the security services offered by Astra, including one manual scan per year and an automated scanner. Astra focuses on comprehensive and continuous security, offering unlimited access to a web application vulnerability scanner after a pentest. They also provide a secure config review of cloud infrastructure. The page lists requirements from the client's end and mentions the availability of the Astra team to assist during vulnerability fixes. Useful documents, such as the Astra VAPT Methodology, Sample VAPT Report, and Sample VAPT Certificate, are also provided. The automated scan is completed within 48 hours."
+  },
+  {
+    "id": "23800eac-abbd-40d4-8789-0de9ee300f99",
+    "type": "page",
+    "title": "Boat names",
+    "summary": "The page content simply states the boat name \"Ciaobella.\""
+  },
+  {
+    "id": "33b8d962-3e29-4a72-b549-0a653fdd9d39",
+    "type": "page",
+    "title": "Men\u2019s bracelets",
+    "summary": "The page contains links to websites where men's bracelets can be purchased, including a Shopify store, Shinola, and Miansai."
+  },
+  {
+    "id": "3d3b0d2a-78fc-45d6-9eff-5d413edb3476",
+    "type": "page",
+    "title": "Wedding Notes",
+    "summary": "This page provides a list of notes related to a wedding, including events like the pre-wedding party, wedding procession, speeches by various individuals such as the bride's parents, groom's parents, best man, best woman, siblings, and the bride and groom themselves."
+  },
+  {
+    "id": "2ada50dc-7fbd-4829-8c98-bd7fbe048c3b",
+    "type": "page",
+    "title": "Finances to update after a move",
+    "summary": "The page content mentions various financial aspects that need to be updated after a move, such as updating accounts with Sonara, Plaid, SF Marathon, Amex, Fidelity, and Vanguard. It also suggests updating information with Outside Lands and the Post Office for mail forwarding."
+  },
+  {
+    "id": "2af78166-90af-474d-8850-c1695760ab6e",
+    "type": "page",
+    "title": "Video Game List",
+    "summary": "The page lists various video games, including Animal Crossing: New Horizons, Super Smash Bros. Ultimate, Luigi\u2019s Mansion 3, Super Mario Odyssey, The Legend of Zelda games, Golf Story, New Super Mario Bros U Deluxe, Super Mario Maker 2, and Cuphead."
+  },
+  {
+    "id": "ee2c2215-dabb-4a59-be7a-6a5a0614d4ea",
+    "type": "page",
+    "title": "Restaurants",
+    "summary": "The page lists three restaurants: Foreign Cinema, Devil\u2019s Teeth, and House of Prime Rib."
+  }
+]

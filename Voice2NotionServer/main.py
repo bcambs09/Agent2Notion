@@ -70,11 +70,6 @@ async def get_api_key(token: str = Depends(oauth2_scheme)) -> str:
 # Initialize Notion client
 notion = AsyncClient(auth=os.getenv("NOTION_TOKEN"))
 
-# Get database ID from environment and validate it
-NOTION_DATABASE_ID: str = os.getenv("NOTION_PAGE_ID", "")
-if not NOTION_DATABASE_ID:
-    raise ValueError("NOTION_PAGE_ID environment variable is not set")
-
 class TextInput(BaseModel):
     text: str
 
@@ -100,7 +95,7 @@ async def add_to_notion(request: Request, input: NotionInput, api_key: str = Dep
 @app.post("/search-notion")
 @limiter.limit("10/minute")
 async def search_notion(request: Request, input: SearchInput, api_key: str = Depends(get_api_key)):
-    """Run an LLM-powered search against cached Notion metadata."""
+    """Run an LLM-powered search against the user's data in Notion."""
     result = await search_notion_data(
         input.query,
         notion,

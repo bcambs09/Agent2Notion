@@ -14,8 +14,7 @@ sys.path.insert(0, str(project_root))
 
 from notion_tools import (
     load_tool_data_from_env,
-    search_notion_data,
-    SearchAgentOutput,
+    search_notion_data
 )
 from notion_client import AsyncClient
 

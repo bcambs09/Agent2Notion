@@ -1,16 +1,11 @@
 ---
-description: 
+description: Use when user asks to make updates to the agentic Notion workflow
 globs: 
 alwaysApply: false
 ---
----
-description: Use when user asks to make updates to the agentic Notion workflow
-globs: **/*
-alwaysApply: true
----
- # Agentic Workflow for Notion Updates
+# Agentic Workflow for Notion Updates
 
-This document outlines the agentic workflow for the Voice2Notion application, specifically how natural language input is processed to make updates to a user's Notion data. The system is built using LangGraph, leveraging its most modern version for robust and flexible agent creation.
+This document outlines the agentic workflow for the Agent2Notion application, specifically how natural language input is processed to make updates to a user's Notion data. The system is built using LangGraph, leveraging its most modern version for robust and flexible agent creation.
 
 ## Core Workflow
 
