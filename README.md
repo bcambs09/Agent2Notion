@@ -2,14 +2,16 @@
 
 An AI-first API, fine-tuned to your Notion workspace.
 
-Either as an initial manual step or as a recurring daily job, Agent2Notion scans your Notion workspace for pages and databases, generating custom descriptions for each. These descriptions become the basis for agentic tool calls that add new database entries or page content to your workspace.
+Agent2Notion scans your Notion workspace for pages and databases, automatically generating custom descriptions for each. These serve as the descriptions for dynamically created LLM tool calls that can add new database entries or page content to your Notion.
 
-The backend is a FastAPI server powered by a LangGraph workflow that can reason over your request and
-call dynamically-generated tools that map directly to your personal Notion workspace.
 
----
+## API use cases
+* iOS shortcuts
+* Alexa skills
+* Custom GPT actions (OpenAPI-compatible)
 
-## 🗺  High-Level Architecture
+
+## High-Level Architecture
 
 ```
 Client ─▶ /add-to-notion  ─┐
@@ -39,9 +41,7 @@ Client ─▶ /add-to-notion  ─┐
 4. The graph loops ⟲ between `notion_chat` and `tools` until the model signals `END`, then the server
    returns the final state to the caller.
 
----
-
-## 🚀 Quick-start
+## Quick-start
 
 ### Requirements
 * Python 3.10+
@@ -51,12 +51,12 @@ Client ─▶ /add-to-notion  ─┐
 ### Installation
 ```bash
 # 1. Get the code
-$ git clone <repo>
+$ git clone git@github.com:bcambs09/Agent2Notion.git
 $ cd Agent2Notion/Agent2NotionServer
 
 # 2. Create and activate virtual-env
 $ python -m venv venv
-$ source venv/bin/activate      # Windows: venv\Scripts\activate
+$ source venv/bin/activate
 
 # 3. Install dependencies
 $ pip install -r requirements.txt
@@ -81,13 +81,33 @@ RULE_NAME="<DESIRED_CRON_RULE_NAME>"
 If `NOTION_TOOL_DATA_PATH` is not set, the server loads `notion_tools_data.json` from the specified S3 bucket/key.
 If `NOTION_DB_INSTRUCTIONS_PATH` is not set, the server loads `db_custom_instructions.json` from the same S3 bucket. Set the variable to use a local override instead.
 
-### (Optional) Pre-generate dynamic tool metadata
-Generating the summaries for every database/page can take >30 s the very first time. Run once and cache locally or upload to S3:
+### Pre-generate dynamic tool metadata
+Generating the summaries for every database/page can take >30 s the very first time. For local usage, just run this once:
 ```bash
 # Local file
-$ python scripts/generate_notion_tool_data.py
-# Upload directly to S3
-$ python scripts/generate_notion_tool_data.py --bucket <your-bucket>
+$ python scripts/local_tool_update.py
+```
+
+
+### Running the server locally
+```bash
+$ uvicorn main:app --reload  # http://localhost:8000
+```
+
+## Sending a Test Request
+
+### Using *curl*
+```bash
+curl -X POST http://localhost:8000/add-to-notion \
+  -H "Authorization: Bearer test-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+        "prompt": "Add a task: Draft the Q2 report by next Friday with high priority."
+      }'
+```
+A success response will return the models final output:
+```json
+Created task in Notion.
 ```
 
 ### Server deployment
@@ -129,29 +149,6 @@ You need to set the following environment variables for the Lambda to work corre
 * NOTION_TOKEN (stored as a secret with a SecretId of the same name)
 * OPENAI_API_KEY (stored as a secret with a SecretId of the same name)
 
-### Running the server locally
-```bash
-$ uvicorn main:app --reload  # http://localhost:8000
-```
-
----
-
-## 📡 Sending a Test Request
-
-### Using *curl*
-```bash
-curl -X POST http://localhost:8000/add-to-notion \
-  -H "Authorization: Bearer test-key" \
-  -H "Content-Type: application/json" \
-  -d '{
-        "prompt": "Add a task: Draft the Q2 report by next Friday with high priority."
-      }'
-```
-A success response will return the models final output:
-```json
-Created task in Notion.
-```
-
 ### Using the helper script
 ```bash
 $ python scripts/send_test_request.py
@@ -170,18 +167,21 @@ curl -X POST http://localhost:8000/search-notion \
   -d '{"query": "meeting notes"}'
 ```
 
----
+## Extending the Agent
 
-## 🛠  Extending the Agent
-**Expose more of your workspace**: simply share additional pages/databases with the integration token and rerun `generate_notion_tool_data.py`.
-**Custom instructions** Update your `db_custom_instructions.json` file in S3 to provide the agent with more specific guidance on a given page. This file should be formatted as a simple JSON object, where the key is the Notion page or database ID, and the value is a string with the custom instructions.
+**Expose more of your workspace**: simply share additional pages/databases with the integration token and rerun `generate_notion_tool_data.py`. Note that there is a hypothetical limit of 128 pages/databases because that is the maximum number of tools that OpenAI allows per request.
 
----
+**Custom instructions**: Update your `db_custom_instructions.json` file in S3 to provide the agent with  specific guidance for a page or database. This file is formatted as a simple JSON object, where the key is the Notion page or database ID, and the value is a string with the custom instructions.
+
+For example, consider a `Tasks` database:
+```json
+{
+    "bd3fcf79-c7ae-43f6-8a9d-8cbd3b5d8fbd": "An unfinished task is defined as one in the In progress or Not Started statuses."
+}
+```
 
 ## 🩺 Health Check
 `GET /health` → `{ "status": "healthy" }`
-
----
 
 ## License
 MIT © 2024
