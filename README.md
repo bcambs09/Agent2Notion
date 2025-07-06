@@ -65,17 +65,15 @@ $ pip install -r requirements.txt
 OPENAI_API_KEY=sk-...
 OPENAI_MODEL=gpt-4o              # (optional) default model name
 NOTION_TOKEN=secret_...
-NOTION_PAGE_ID=<default_database_for_tasks>
-NOTION_MOVIE_DATABASE_ID=<movie_database_id_if_used>
-API_KEY=test-key               # used by the endpoint security
+API_KEY=test-key               # used for FastAPI authentication
 ALLOWED_ORIGINS=*              # (optional) CORS
 NOTION_TOOL_DATA_BUCKET=<s3_bucket_for_tool_data>  # defaults to "notionserver"
 NOTION_TOOL_DATA_KEY=notion_tools_data.json   # (optional)
-NOTION_TOOL_DATA_PATH=./notion_tools_data.json  # (optional local override)
+NOTION_TOOL_DATA_PATH=./path/to/tools/json/file  # (optional local override)
 NOTION_DB_INSTRUCTIONS_PATH=./db_custom_instructions.json  # (optional local override)
 EB_ENVIRONMENT_NAME=<elastic_beanstalk_env>  # used by the daily refresh Lambda
 LAMBDA_EXECUTION_ROLE_ARN="<LAMBDA_EXECUTION_ROLE_ARN>"
-SCHEMA_REFRESH_CODE_BUCKET="<SCHEMA_REFRESH_CODE_BUCKET>"
+SCHEMA_REFRESH_CODE_BUCKET="<SCHEMA_REFRESH_CODE_BUCKET>" # defaults to "notionserver"
 LAMBDA_NAME="<DESIRED_SCHEMA_UPDATE_LAMBDA_NAME>"
 LAMBDA_ARN="<CREATED_LAMBDA_ARN>"
 RULE_NAME="<DESIRED_CRON_RULE_NAME>"
@@ -121,7 +119,14 @@ The Lambda regenerates `notion_tools_data.json`, uploads it to the S3 bucket
 specified by `NOTION_TOOL_DATA_BUCKET` and restarts the environment defined in
 `EB_ENVIRONMENT_NAME`.
 
-### Run the server locally
+You need to set the following environment variables (descriptions above) for the Lambda to work correctly:
+* NOTION_TOOL_DATA_BUCKET
+* NOTION_TOOL_DATA_KEY
+* EB_ENVIRONMENT_NAME
+* NOTION_TOKEN (stored as a secret with a SecretId of the same name)
+* OPENAI_API_KEY (stored as a secret with a SecretId of the same name)
+
+### Running the server locally
 ```bash
 $ uvicorn main:app --reload  # http://localhost:8000
 ```
@@ -175,9 +180,8 @@ curl -X POST http://localhost:8000/search-notion \
 ---
 
 ## 🛠  Extending the Agent
-1. **Add a new static tool**: implement an async function, then wrap it with `StructuredTool.from_function` in `notion_agent.py`.
-2. **Expose more of your workspace**: simply share additional pages/databases with the integration token and rerun `generate_notion_tool_data.py`.
-3. **Adjust the prompt** in `notion_agent.py` to change how the model reasons about tasks.
+**Expose more of your workspace**: simply share additional pages/databases with the integration token and rerun `generate_notion_tool_data.py`.
+**Custom instructions** Update your `db_custom_instructions.json` file in S3 to provide the agent with more specific guidance on a given page. This file should be formatted as a simple JSON object, where the key is the Notion page or database ID, and the value is a string with the custom instructions.
 
 ---
 
