@@ -1,8 +1,8 @@
 # Agent2Notion
 
-An AI-first API into your Notion workspace.
+An AI-first API, fine-tuned to your Notion workspace.
 
-The agent that turns natural language (spoken or typed) into structured Notion content and queries.
+Either as an initial manual step or as a recurring daily job, Agent2Notion scans your Notion workspace for pages and databases, generating custom descriptions for each. These descriptions become the basis for agentic tool calls that add new database entries or page content to your workspace.
 
 The backend is a FastAPI server powered by a LangGraph workflow that can reason over your request and
 call dynamically-generated tools that map directly to your personal Notion workspace.
@@ -45,7 +45,7 @@ Client ─▶ /add-to-notion  ─┐
 
 ### Requirements
 * Python 3.10+
-* An **OpenAI** API key with GPT-4 access
+* An **OpenAI** API key
 * A **Notion** integration token with write permissions to the pages/databases you want to modify
 
 ### Installation
@@ -71,7 +71,7 @@ NOTION_TOOL_DATA_BUCKET=<s3_bucket_for_tool_data>  # defaults to "notionserver"
 NOTION_TOOL_DATA_KEY=notion_tools_data.json   # (optional)
 NOTION_TOOL_DATA_PATH=./path/to/tools/json/file  # (optional local override)
 NOTION_DB_INSTRUCTIONS_PATH=./db_custom_instructions.json  # (optional local override)
-EB_ENVIRONMENT_NAME=<elastic_beanstalk_env>  # used by the daily refresh Lambda
+EB_ENVIRONMENT_NAME=<elastic_beanstalk_env>  # used by the daily refresh Lambda (see description below)
 LAMBDA_EXECUTION_ROLE_ARN="<LAMBDA_EXECUTION_ROLE_ARN>"
 SCHEMA_REFRESH_CODE_BUCKET="<SCHEMA_REFRESH_CODE_BUCKET>" # defaults to "notionserver"
 LAMBDA_NAME="<DESIRED_SCHEMA_UPDATE_LAMBDA_NAME>"
@@ -90,6 +90,9 @@ $ python scripts/generate_notion_tool_data.py
 $ python scripts/generate_notion_tool_data.py --bucket <your-bucket>
 ```
 
+### Server deployment
+You can deploy the FastAPI server wherever you'd like, but Agent2Notion is optimized for AWS because of the automated update Lambda (described below). Elastic Beanstalk works well and is easy to set up. See `.github/workflows/deploy.yml` for an example GitHub Action that automates the deployment process.
+
 ### Automating tool metadata refresh (AWS)
 Use the provided Lambda function and helper script to update the dynamic tool
 metadata daily:
@@ -99,29 +102,29 @@ metadata daily:
    $  ./Agent2NotionServer/scripts/build_lambda_daily_tool_update.sh 
    ```
 
-2. Run `./Agent2NotionServer/aws/setup_daily_tool_update.sh` to create the Lambda. Copy the LAMBDA_ARN.
-   
-2. Copy to S3
+2. Run `./Agent2NotionServer/aws/setup_daily_tool_update.sh` to create the Lambda. Copy the LAMBDA_ARN in your `.env` file.
+
+3. Run `./setup_daily_lambda_event.sh` to setup the Lambda to run every day.
+
+4. (As needed) Update the function code to propagate any changes
    ```bash
    $ aws s3 cp Agent2NotionServer/scripts/lambda_daily_tool_update.zip \
          s3://${SCHEMA_REFRESH_CODE_BUCKET}/lambda/agent2notion-daily-tool-update.zip \
          --region us-east-1
-   ```
-3. Update function code
-   ```base
+
    $ aws lambda update-function-code \
      --function-name agent2notion-daily-tool-update \
      --s3-bucket ${SCHEMA_REFRESH_CODE_BUCKET} \
      --s3-key lambda/agent2notion-daily-tool-update.zip \
      --region us-east-1
+   ```
 
-The Lambda regenerates `notion_tools_data.json`, uploads it to the S3 bucket
-specified by `NOTION_TOOL_DATA_BUCKET` and restarts the environment defined in
+The Lambda will regenerate `notion_tools_data.json`, upload the JSON file to the S3 bucket
+specified by `NOTION_TOOL_DATA_BUCKET`, and restart the environment defined in
 `EB_ENVIRONMENT_NAME`.
 
-You need to set the following environment variables (descriptions above) for the Lambda to work correctly:
+You need to set the following environment variables for the Lambda to work correctly:
 * NOTION_TOOL_DATA_BUCKET
-* NOTION_TOOL_DATA_KEY
 * EB_ENVIRONMENT_NAME
 * NOTION_TOKEN (stored as a secret with a SecretId of the same name)
 * OPENAI_API_KEY (stored as a secret with a SecretId of the same name)
