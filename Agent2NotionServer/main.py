@@ -88,9 +88,8 @@ async def add_to_notion(request: Request, input: NotionInput, api_key: str = Dep
     }
 
     result = await chain.ainvoke(state)
-
-    return {"message": "Request processed successfully", "result": result}
-
+    # Return the last message from the result
+    return result["messages"][-1].content
 
 @app.post("/search-notion")
 @limiter.limit("10/minute")

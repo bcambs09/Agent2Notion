@@ -147,19 +147,9 @@ curl -X POST http://localhost:8000/add-to-notion \
         "prompt": "Add a task: Draft the Q2 report by next Friday with high priority."
       }'
 ```
-A typical successful response looks like:
+A success response will return the models final output:
 ```json
-{
-  "message": "Request processed successfully",
-  "result": {
-    "messages": [
-      {
-        "type": "ai",
-        "content": "Created task in Notion."
-      }
-    ]
-  }
-}
+Created task in Notion.
 ```
 
 ### Using the helper script
