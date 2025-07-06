@@ -1,6 +1,9 @@
 # Agent2Notion
 
-An agentic system that turns natural language (spoken or typed) into structured Notion content.
+An AI-first API into your Notion workspace.
+
+The agent that turns natural language (spoken or typed) into structured Notion content and queries.
+
 The backend is a FastAPI server powered by a LangGraph workflow that can reason over your request and
 call dynamically-generated tools that map directly to your personal Notion workspace.
 
