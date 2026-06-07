@@ -21,7 +21,7 @@ from logging import getLogger
 logger = getLogger(__name__)
 
 load_dotenv()
-OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-5.4")
 
 set_debug(True)
 set_verbose(True)
